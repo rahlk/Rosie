@@ -1,0 +1,142 @@
+-------------------------------
+-- Inline Comments
+--
+-- Matches in line comments starting with a "'". Also
+-- captures the code preceeding the comment on the same line.
+--
+-- Run: rosie -wholefile vb.line_comments <vb-source-file>
+-- Structure: vb.line_comments                      // Parent pattern to extract all line comments from file
+--                \- vb.line_comment                // Matches a single line comment
+--                    \- vb.line_comment_context    // The code on the line preceeding the comment
+--                    \- vb.line_comment_body       // Matches the whole comment text
+--                        \- vb.line_comment_text   // The text of the comment
+-------------------------------
+
+alias vb.line_comment_start= "'"
+vb.line_comment_text= {!line_end .}*
+alias vb.line_comment_pre= {!vb.line_comment_start !line_end .}*
+vb.line_comment_context= {!vb.line_comment_start !line_end .}*
+vb.line_comment_body= {vb.line_comment_start vb.line_comment_text}
+vb.line_comment= {vb.line_comment_context vb.line_comment_body}
+vb.line_comments= {vb.line_comment / .}*
+
+-- Aliased version of pattern for use in other patterns
+alias vb.alias_line_comment_text= {!line_end .}*
+alias vb.alias_line_comment_context= {!vb.line_comment_start !line_end .}*
+alias vb.alias_line_comment_body= {vb.line_comment_start vb.alias_line_comment_text}
+alias vb.alias_line_comment= {vb.alias_line_comment_context vb.alias_line_comment_body}
+
+-------------------------------
+-- String Literals
+--
+-- Currently matches for typical vb string literals.
+-- Does allow for escaped single and double quotes
+--
+-- Run: rosie -wholefile vb.strings <vb-source-file>
+-- Structure: vb.strings        // Parent pattern to match all string literals
+--                \- vb.string  // Pattern to match a single string
+-------------------------------
+
+vb.string = ["] {([\\] / !["]) .}* ["]
+vb.strings = {vb.alias_line_comment / vb.string / .}*
+
+--A "aliased" version is provided to allow for suppressed output in other patterns
+alias vb.alias_string = ["] {([\\] / !["]) .}* ["]
+
+-------------------------------
+-- Dependencies
+--
+-- Matches dependencies declared with the "Imports"
+-- key word.
+--
+-- Run: rosie -wholefile vb.dependencies <vb-source-file>
+-- Structure: rb.dependencies                 // Parent pattern to match all dependencies in a file
+--                \- rb.dependency            // Matches a single dependency
+--                    \- vb.dependency_alias  // Name of the alias for the dependency if one is given and '='
+--                        \- vb.alias_name    // Text of the name of the alias for the dependency
+--                    \- vb.dependency_name   // Name of the dependency being imported
+-------------------------------
+
+alias vb.import = "Imports "
+vb.alias_name = {!"=" !line_end .}*
+alias vb.import_alias = "="
+alias vb.dependency_alias = {vb.alias_name vb.import_alias} 
+vb.dependency_name = {!"=" !line_end .}*
+alias vb.dependency_text = vb.dependency_alias? vb.dependency_name
+vb.dependency = vb.import vb.dependency_text
+alias vb.dependencies_pre = {!vb.import !line_end .}*
+
+vb.dependencies = {{vb.dependency / vb.dependencies_pre} line_end}*
+
+-------------------------------
+-- Functions
+--
+-- Matches functions, including the function body.
+--
+-- Run: rosie -wholefile vb.functions <vb-source-file>
+-- Structure: vb.functions                        // Parent pattern to match all functions in a file
+--                \- vb.function                  // Matches an entire function
+--                    \- vb.funcdef               // Matches the functions definition
+--                        \- vb.funcname          // Name of the function
+--                        \- vb.paramlist         // A list of the function parameters if there are any
+--                            \- vb.paramstmnt    // Fully qualified vb parameter statement
+--                                \- vb.param     // Name of the parameter
+--                                \- vb.datatype  // Datatype of the parameter
+--                        \- vb.datatype          // Type of the function
+--                    \- vb.funcbody              // Matches the body of the function
+-------------------------------
+
+alias vb.def = "Function " / "Sub "
+vb.funcname = [:alnum:]+
+vb.param = [:alnum:]+
+vb.datatype = [:alnum:]+
+vb.paramstmnt = "Optional"? ("ByVal" / "ByRef") "ParamArray"? vb.param "As" vb.datatype
+vb.paramlist = (vb.paramstmnt ",")* vb.paramstmnt
+vb.funcdef = vb.def vb.funcname "(" vb.paramlist? ")" ("As" vb.datatype)?
+alias vb.funcend = "End Function" / "End Sub"
+vb.funcbody = {!vb.funcend .}*
+vb.function = {vb.funcdef vb.funcbody vb.funcend}
+
+vb.functions = {{!vb.function .}* vb.function? .}* {!vb.function .}*
+
+-------------------------------
+--Class Defs
+--
+-- Matches all classes in a file including the class body.
+--
+-- Run: rosie -wholefile vb.classes <vb-source-file>
+-- Structure: vb.classes                            // Parent pattern to match all classes in a file
+--                \- vb.class                       // Matches a single class including the class body
+--                    \- vb.classdef                // Matches a single class definition
+--                        \- vb.classname           // Name of the class
+--                        \- vb.typelist            // List of type parameters for the class
+--                            \- vb.typenames       // List of type names
+--                                \- vb.typename    // Name of the type parameter
+--                            \- vb.constraintlist  // List of constraints on the datatype
+--                                \- vb.constraint  // Requirement that constrains the datatype
+--                        \- vb.parentclass         // Name of the parent class
+--                        \- vb.interfacenames      // List of the names of the interfaces this class implements
+--                            \- vb.interfacename   // Name of a single interface
+--                    \- vb.classbody               // Matches the body of the class
+-------------------------------
+
+alias vb.accessmodifier = "Public" / "Protected" / "Friend" / "Private" / "Protected Friend"
+alias vb.inheritable = "MustInherit" / "NotInheritable"
+vb.classname = [[:alnum:][_]]+
+alias vb.genericmodifier = "Out" / "In"
+vb.typename = [[:alnum:][_]]+
+vb.typenames = (vb.typename ",")* vb.typename
+vb.constraint = [[:alnum:][_]]+
+vb.constraintlist = "{"? (vb.constraint ",")* vb.constraint "}"?
+vb.typelist = vb.genericmodifier? vb.typenames ("As" vb.constraintlist)?
+vb.parentclass = [[:alnum:][_]]+
+vb.interfacename = [[:alnum:][_.]]+
+vb.interfacenames = (vb.interfacename ",")* vb.interfacename
+vb.classdef = vb.accessmodifier? "Shadows"? vb.inheritable? ("Class" / "Interface") vb.classname ("(" "Of" vb.typelist ")")? ("Inherits" vb.parentclass)? ("Implements" vb.interfacenames)?
+vb.classend = "End Class" / "End Interface"
+vb.classbody = {!vb.classend .}*
+vb.class = vb.classdef vb.classbody vb.classend
+
+vb.classes = {vb.class / .}*
+
+vb.file = {vb.line_comment / vb.string / vb.dependency / vb.class / vb.function / .}* 

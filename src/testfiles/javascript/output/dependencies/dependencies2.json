@@ -1,0 +1,64 @@
+{
+    "js.dependencies": {
+        "subs": [
+            {
+                "js.dependency": {
+                    "subs": [
+                        {
+                            "js.member": {
+                                "subs": [
+                                    {
+                                        "js.member_name": {
+                                            "pos": 35,
+                                            "text": "A"
+                                        }
+                                    }
+                                ],
+                                "pos": 35,
+                                "text": "A"
+                            }
+                        },
+                        {
+                            "js.module": {
+                                "pos": 42,
+                                "text": "'@A'"
+                            }
+                        }
+                    ],
+                    "pos": 28,
+                    "text": "import A from '@A'"
+                }
+            },
+            {
+                "js.dependency": {
+                    "subs": [
+                        {
+                            "js.member": {
+                                "subs": [
+                                    {
+                                        "js.member_name": {
+                                            "pos": 55,
+                                            "text": "B"
+                                        }
+                                    }
+                                ],
+                                "pos": 55,
+                                "text": "B"
+                            }
+                        },
+                        {
+                            "js.module": {
+                                "pos": 62,
+                                "text": "'@B'"
+                            }
+                        }
+                    ],
+                    "pos": 48,
+                    "text": "import B from '@B'"
+                }
+            }
+        ],
+        "pos": 1,
+        "text": "// classflow/import-alias\n\nimport A from '@A';\nimport B from '@B';\n"
+    }
+}

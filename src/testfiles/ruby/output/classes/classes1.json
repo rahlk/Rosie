@@ -1,0 +1,22 @@
+{
+    "rb.classes": {
+        "text": "class Customer\n   @@no_of_customers = 0\n   def initialize(id, name, addr)\n      @cust_id = id\n      @cust_name = name\n      @cust_addr = addr\n   end\nend\n",
+        "subs": [
+            {
+                "rb.class": {
+                    "text": "class Customer\n",
+                    "subs": [
+                        {
+                            "rb.classname": {
+                                "text": "Customer",
+                                "pos": 7
+                            }
+                        }
+                    ],
+                    "pos": 1
+                }
+            }
+        ],
+        "pos": 1
+    }
+}

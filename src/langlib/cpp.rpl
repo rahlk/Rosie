@@ -1,0 +1,168 @@
+-------------------------------
+--String Literals
+--
+--Currently matches for typical c string and character literals.
+--Does allow for escaped single and double quotes
+--A "aliased" version is provided to allow for suppressed output in other patterns
+-- Run: rosie -wholefile cpp.strings <cpp-source-file>
+-- Structure: cpp.strings                      // Parent pattern to extract all strings from file
+--              \- cpp.string                  // Matches a single cpp string
+--            cpp.characters                   // Parent pattern to match all character literals from file
+--              \- cpp.character               // Matches a single cpp character
+-- NOTE cpp.strings and cpp.characters are defined AFTER comments to allow for
+--      commented strings to be ignored.
+-------------------------------
+alias cpp.alias_string = ["] {([\\] / !["]) .}* ["]
+cpp.string = ["] {([\\] / !["]) .}* ["]
+
+alias cpp.alias_character = ['] {([\\] / ![']) .} [']
+cpp.character =  ['] {([\\] / ![']) .} [']
+
+-------------------------------
+-- Inline Comments
+--
+-- Matches in line comments starting with a '//'. Also
+-- captures the code preceding the comment on the same line.
+--
+-- Run: rosie -wholefile cpp.line_comments <cpp.source-file>
+-- Structure: cpp.line_comments                      // Parent pattern to extract all comments from file
+--                \- cpp.line_comment                // Matches a single line comment
+--                    \- cpp.line_comment_context    // The code on the line preceding the comment
+--                    \- cpp.line_comment_body       // Matches the whole comment text
+--                        \- cpp.line_comment_text   // The text of the comment
+-------------------------------
+alias cpp.line_comment_start = "//"
+cpp.line_comment_text = {!line_end .}*
+alias cpp.line_comment_pre = {!cpp.line_comment_start !line_end .}*
+cpp.line_comment_context = {!cpp.line_comment_start !line_end .}*
+cpp.line_comment_body = {cpp.line_comment_start cpp.line_comment_text}
+cpp.aliased_line_comment = {cpp.line_comment_context cpp.line_comment_body}
+cpp.line_comment = {cpp.line_comment_context cpp.line_comment_body}
+cpp.line_comments = {cpp.line_comment / .}*
+
+alias cpp.alias_line_comment_start = "//"
+alias cpp.alias_line_comment_text = {!line_end .}*
+alias cpp.alias_line_comment_pre = {!cpp.alias_line_comment_start !line_end .}*
+alias cpp.alias_line_comment_context = {!cpp.alias_line_comment_start !line_end .}*
+alias cpp.alias_line_comment_body = {cpp.alias_line_comment_start cpp.alias_line_comment_text}
+alias cpp.alias_line_comment = {cpp.alias_line_comment_context cpp.alias_line_comment_body}
+alias cpp.alias_line_comment = {cpp.alias_line_comment_context cpp.alias_line_comment_body}
+alias cpp.alias_line_comments = {{cpp.alias_line_comment / cpp.alias_line_comment_body / cpp.alias_line_comment_pre} .}*
+
+
+-------------------------------
+-- Block Comments
+--
+-- Matches block comments. Block comments in c
+-- start with /* and end with */
+--
+-- Run: rosie -wholefile cpp.block_comments <cpp.source-file>
+-- Structure: cpp.block_comments                  // Parent pattern to match all block comments
+--                \- cpp.block_comment            // Matches a single block comment
+--                    \- cpp.block_comment_body   // Matches the body of a block comment
+-------------------------------
+alias cpp.block_comment_start = "/*"
+alias cpp.block_comment_end = "*/"
+alias cpp.block_comment_pre = {!cpp.block_comment_start.}*
+cpp.block_comment_body = {!cpp.block_comment_end .}*
+cpp.aliased_block_comment = { cpp.block_comment_start cpp.block_comment_body cpp.block_comment_end}
+cpp.block_comment = { cpp.block_comment_start cpp.block_comment_body cpp.block_comment_end}
+
+cpp.block_comments = {cpp.block_comment_pre cpp.block_comment }*
+
+alias cpp.alias_block_comment_start = "/*"
+alias cpp.alias_block_comment_end = "*/"
+alias cpp.alias_block_comment_pre = {!cpp.block_comment_start.}*
+
+alias cpp.alias_block_comment_body = {!cpp.alias_block_comment_end .}*
+alias cpp.alias_block_comment = { cpp.alias_block_comment_start cpp.alias_block_comment_body cpp.alias_block_comment_end}
+alias cpp.alias_block_comment = { cpp.alias_block_comment_start cpp.alias_block_comment_body cpp.alias_block_comment_end}
+
+alias cpp.alias_block_comments = {cpp.alias_block_comment_pre cpp.alias_block_comment }*
+
+cpp.strings = {cpp.alias_line_comment / cpp.alias_block_comment / cpp.string / .}*
+cpp.characters = {cpp.alias_line_comment / cpp.alias_block_comment / cpp.character / .}*
+
+-------------------------------
+-- Dependencies
+--
+-- Matches dependencies declared with "include" 
+--
+-- Run: rosie -wholefile cpp.dependencies <cpp.source-file>
+-- Structure: cpp.dependencies                  // Parent pattern to match all dependencies in a file
+--                \- cpp.dependency             // Matches a single import
+-------------------------------
+alias cpp.include = "#include "
+cpp.header = {{!">" !["]} .}*
+alias import_lit = {"<" / ["]} cpp.header
+cpp.dependency = {cpp.include import_lit {">" / ["]}}
+alias cpp.dependencies_pre = {!cpp.include !line_end .}*
+
+cpp.dependencies = {{cpp.dependency / cpp.dependencies_pre} line_end}*
+
+-------------------------------
+-- Functions
+--
+-- Pattern to match function definitions. This does not
+-- capture the functions body. This is currently the same syntatic definition of a C++ function.
+-- New features of C++ have not yet been accounted for.
+--
+-- Run: rosie -wholefile cpp.functions <cpp-source-file>
+-- Structure: cpp.functions                       // Parent pattern that matches all function definitions
+--                \- cpp.function                 // Matches an entire function definition
+--                        \- cpp.static           // Matches if the function call is defined as static
+--                        \- cpp.return_type      // Matches the return type of the function
+--                        \- cpp.pointer          // Matches wether or not the functions return type is a pointer
+--                        \- cpp.function_name    // Matches the functions defined name
+--                        \- cpp.parameters       // Matches the functions list of parameters
+--                            \- cpp.single_param // Matches a single parameter in a function call.
+--------------------------------
+alias cpp.seperator = ","
+alias cpp.start_paren = "("
+alias cpp.end_paren = ")"
+alias cpp.start_block = "{"
+alias cpp.end_block = "}"
+alias cpp.pointer = "*"
+alias cpp.invalid_identifier = [^ [A-Z][a-z][0-9][_][&][<][>]]
+alias cpp.keywords = {"if" / "for" / "switch" / "catch" / "try" / "do" / "while" / "else" / "else if" / "} else if"}
+alias cpp.whitespace = [:space:]
+alias cpp.const = "const"
+cpp.static = "static"
+cpp.inline = "inline"
+cpp.return_type = !cpp.keywords cpp.const? "struct"? {!cpp.invalid_identifier .}+ cpp.pointer*
+cpp.function_name = !cpp.keywords {!line_end !cpp.start_paren .}+
+
+cpp.single_param = {!cpp.end_paren ![,] .}*
+alias cpp.multi_param = {[,] cpp.single_param}*
+cpp.parameters = {cpp.start_paren cpp.single_param cpp.multi_param cpp.end_paren cpp.whitespace+}
+
+cpp.function = cpp.whitespace? cpp.static? cpp.inline? cpp.return_type !cpp.keywords cpp.function_name !cpp.keywords cpp.parameters cpp.const? "{"
+cpp.functions = {cpp.function / .}*
+
+-------------------------------
+-- Structs/Class
+--
+-- Pattern to match struct definitions. Does not
+-- capture struct bodies.
+--
+-- Run: rosie -wholefile [cpp.structs | cpp.classes] <c++-source-file>
+-- Structure: cpp.structs | cpp.classes                         // Parent pattern that matches all struct/class definitions
+--                \- cpp.struct | cpp.class                     // Matches an entire struct/class definition
+--                    \- cpp.struct_name | cpp.class_name       // Name of the struct/class
+-------------------------------
+
+alias cpp.typedef = "typedef "
+alias cpp.struct = "struct " 
+alias cpp.enum = "enum"
+alias cpp.class = {cpp.whitespace "class" cpp.whitespace}
+cpp.type = {{!cpp.invalid_identifier .}+ " "}+
+
+cpp.struct_name = {!cpp.start_block .}*
+cpp.class_name = {!cpp.start_block .}*
+
+cpp.struct = cpp.typedef? cpp.struct cpp.type?  cpp.struct_name
+cpp.class = {cpp.enum? cpp.class cpp.type? cpp.class_name}
+cpp.structs = {{cpp.alias_line_comment / cpp.alias_block_comment}? cpp.struct / .}*
+cpp.classes = {{cpp.alias_line_comment / cpp.alias_block_comment}? cpp.class / .}*
+
+cpp.file = {cpp.block_comment / cpp.line_comment / cpp.dependency / cpp.struct / cpp.class / cpp.function / .}*

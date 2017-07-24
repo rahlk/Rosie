@@ -1,0 +1,122 @@
+-------------------------------
+--String Literals
+--
+--Currently matches for typical c string and character literals.
+--Does allow for escaped single and double quotes
+--A "aliased" version is provided to allow for suppressed output in other patterns
+-- Run: rosie -wholefile py.strings <c-source-file>
+-- Structure: py.strings                      // Parent pattern to extract all strings from file
+--              \- py.string                  // Matches a single c string
+-- NOTE py.strings and py.characters are defined AFTER comments to allow for
+--      commented strings to be ignored.
+-------------------------------
+alias py.alias_double_quoted_string = ["] {([\\] / !["]) .}* ["]
+alias py.alias_single_quoted_string = ['] {([\\] / ![']) .}* [']
+py.string = py.alias_double_quoted_string / py.alias_single_quoted_string
+
+-------------------------------
+-- Inline Comments
+--
+-- Matches in line comments starting with a '//'. Also
+-- captures the code preceeding the comment on the same line.
+--
+-- Run: rosie -wholefile cs.line_comments <C#-source-file>
+-- Structure: cs.line_comments                      // Parent pattern to extract all comments from file
+--                \- cs.line_comment                // Matches a single line comment
+--                    \- cs.line_comment_context    // The code on the line preceeding the comment
+--                    \- cs.line_comment_body       // Matches the whole comment text
+--                        \- cs.line_comment_text   // The text of the comment
+-------------------------------
+
+alias py.line_comment_start= "#"
+py.line_comment_text= {!line_end .}*
+alias py.line_comment_pre= {!py.line_comment_start !line_end .}*
+py.line_comment_context= {!py.line_comment_start !line_end .}*
+py.line_comment_body= {py.line_comment_start py.line_comment_text}
+py.line_comment= {py.line_comment_context py.line_comment_body}
+py.line_comments= {py.line_comment .}*
+
+alias py.alias_line_comment_start= "#"
+alias py.alias_line_comment_text= {!line_end .}*
+alias py.alias_line_comment_pre= {!py.alias_line_comment_start !line_end .}*
+alias py.alias_line_comment_context= {!py.alias_line_comment_start !line_end .}*
+alias py.alias_line_comment_body= {py.alias_line_comment_start py.alias_line_comment_text}
+alias py.alias_line_comment= {py.alias_line_comment_context py.alias_line_comment_body}
+alias py.alias_line_comments= {{py.alias_line_comment / py.alias_line_comment_body / py.line_comment_pre} .}*
+
+py.strings = {py.alias_line_comment / py.string / .}*
+
+-------------------------------
+-- Dependencies
+--
+-- Matches python import statements. This should include the complete definition of a python
+-- import aka from, import, as, etc.
+--
+-- Run: rosie -wholefile cs.dependencies <python-source-file>
+-- Structure: cs.dependencies                       // Matches all dependencies in a file
+--                \- cs.dependency                  // Matches a single dependency
+--                    \- py.import_all              // Matches a python import all statement i.e from parent import *
+--                       \- py.parent_module        // The module of the import all statement
+--                    \- py.import_from_parent      // Matches a python sub imoprt i.e from module import function
+--                       \- py.parent_module        // The "parent" module of the import
+--                       \- py.import_module        // Matches a nested import module. See definition below for more.
+--                    \- py.import_module           // Matches a python import i.e import module
+--                       \- py.module               // A python module identifier
+--                       \- py.module_alias         // Matches a user made alias i.e the alias portion of import module as alias 
+-------------------------------
+alias py.import = "import "
+alias py.from = "from "
+alias py.as = "as "
+alias py.seperator = ","
+
+py.module_name = {!line_end !py.as !py.seperator .}*
+py.parent_name = {!py.import .}*
+py.alias_name = {!line_end !py.seperator .}*
+
+py.module_alias = {py.as py.alias_name}
+py.module = {py.module_name py.module_alias?}
+py.parent_module = {py.from py.parent_name}
+
+py.import_module = {py.import py.module {py.seperator py.module}*}
+py.import_from_parent = {py.parent_module py.import_module}
+py.import_all = {py.parent_module py.import "\*"}
+
+py.dependency = {py.import_all / py.import_from_parent / py.import_module}
+alias py.dependencies_pre = {!java.import !line_end .}*
+py.dependencies = {py.alias_line_comment / py.dependency / .}*
+
+-------------------------------
+-- Functions
+--
+-- Matches python function definition. This DOES not match any information within 
+-- the body of the function, currently this is not possible within rosie.
+--
+-- Run: rosie -wholefile cs.functions <python-source-file>
+-- Structure: cs.functions                          // Matches all functions in a file
+--                \- cs.function                    // Matches a single function
+--                    \- py.function_name           // The user defined function
+--                    \- py.paraeters               // The plain list of function parameters
+-------------------------------
+py.function_name = {!"(" .}*
+py.paramaters = {!"):"  .}*
+py.function = {"def " py.function_name "(" py.paramaters "):"}
+py.functions = {py.alias_line_comment? py.function / .}*
+
+-------------------------------
+-- Classes
+--
+-- Matches python class definitions. This DOES not match any information within 
+-- the body of the class, currently this is not possible within rosie.
+--
+-- Run: rosie -wholefile cs.functions <python-source-file>
+-- Structure: cs.classes                         // Matches all classes in a file
+--                \- cs.class                    // Matches a single class
+--                    \- py.class_name           // The name of the class
+--                    \- py.parents              // Any implemented classes
+-------------------------------
+py.class_name = {!"(" .}*
+py.parents= {!"):"  .}*
+py.class = {"class " py.class_name "(" py.parents "):"}
+py.classes = {py.alias_line_comment? py.class / .}+
+
+py.file = { py.line_comment / py.dependency / py.function / py.class / .}*

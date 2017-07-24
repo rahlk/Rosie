@@ -1,0 +1,36 @@
+{
+    "b.functions": {
+        "subs": [
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 55,
+                                "text": "a"
+                            }
+                        }
+                    ],
+                    "pos": 54,
+                    "text": " a()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 78,
+                                "text": "b"
+                            }
+                        }
+                    ],
+                    "pos": 77,
+                    "text": " b()"
+                }
+            }
+        ],
+        "pos": 1,
+        "text": "#!/bin/sh\n# pwoodworth/bashsupport\n\na=1\nb=1\n\nfunction a() {\nx=1\n    function b()"
+    }
+}

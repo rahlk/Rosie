@@ -1,0 +1,1 @@
+{"r.line_comments":{"pos":1,"text":"statesInfo <- read.csv('stateData.csv')\n\nsubset(statesInfo, state.region == 1)\nstateSubset <- statesInfo[statesInfo$illiteracy == 0.5, ]\n\n\ndim(stateSubset)\nstr(stateSubset)\n\nstateSubset\n"}}

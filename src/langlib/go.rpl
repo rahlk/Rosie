@@ -1,0 +1,150 @@
+-------------------------------
+-- Inline Comments
+--
+-- Matches in line comments starting with a '//'. Also
+-- captures the code preceding the comment on the same line.
+--
+-- Run: rosie -wholefile go.line_comments <go-source-file>
+-- Structure: go.line_comments                      // Parent pattern to extract all comments from file
+--                \- go.line_comment                // Matches a single line comment
+--                    \- go.line_comment_context    // The code on the line preceding the comment
+--                    \- go.line_comment_body       // Matches the whole comment text
+--                        \- go.line_comment_text   // The text of the comment
+-------------------------------
+
+alias go.line_comment_start= "//"
+go.line_comment_text= {!line_end .}*
+alias go.line_comment_pre= {!go.line_comment_start !line_end .}*
+go.line_comment_context= {!go.line_comment_start !line_end .}*
+go.line_comment_body= {go.line_comment_start go.line_comment_text}
+go.line_comment= {go.line_comment_context go.line_comment_body}
+go.line_comments= {go.line_comment / .}*
+
+-- Aliased version of the pattern for use in other patterns
+alias go.alias_line_comment_text= {!line_end .}*
+alias go.alias_line_comment_context= {!go.line_comment_start !line_end .}*
+alias go.alias_line_comment_body= {go.line_comment_start go.alias_line_comment_text}
+alias go.alias_line_comment= {go.alias_line_comment_context go.alias_line_comment_body}
+
+-------------------------------
+-- Block Comments
+--
+-- Matches block comments. Block comments in go
+-- start with /* and end with */
+--
+-- Run: rosie -wholefile go.block_comments <go-source-file>
+-- Structure: go.block_comments                  // Parent pattern to match all block comments
+--                \- go.block_comment            // Matches a single block comment
+--                    \- go.block_comment_body   // Matches the body of a block comment
+-------------------------------
+
+alias go.block_comment_start = "/*"
+alias go.block_comment_end = "*/"
+alias go.block_comment_pre= {!go.block_comment_start.}*
+go.block_comment_body= {!go.block_comment_end .}*
+go.block_comment= {go.block_comment_start go.block_comment_body go.block_comment_end}
+go.block_comments= {go.block_comment_pre go.block_comment}*
+
+-- Aliased version of the pattern for use in other patterns
+alias go.alias_block_comment_body= {!go.block_comment_end .}*
+alias go.alias_block_comment= {go.block_comment_start go.alias_block_comment_body go.block_comment_end}
+
+-------------------------------
+-- String Literals
+--
+-- Currently matches for typical Go string and character literals.
+-- Does allow for escaped single and double quotes
+--
+-- Run: rosie -wholefile go.strings <Go-source-file>
+-- Structure: go.strings        // Parent pattern to match all string literals
+--                \- go.string  // Pattern to match a single string
+-------------------------------
+
+go.string = (["] {([\\] / !["]) .}* ["]) / (['] {([\\] / ![']) .}* ['])
+go.strings = {go.alias_line_comment / go.alias_block_comment / go.string / .}*
+
+--A "aliased" version is provided to allow for suppressed output in other patterns
+alias go.alias_string = (["] {([\\] / !["]) .}* ["]) / (['] {([\\] / ![']) .}* ['])
+
+-------------------------------
+-- Dependencies
+--
+-- Matches dependencies declared with "import" and
+-- packages listed with "package".
+--
+-- Run: rosie -wholefile go.dependencies <go-source-file>
+-- Structure: go.dependencies                  // Parent pattern to match all dependencies in a file
+--                \- go.package                // Matches a single package
+--                    \- go.package_text       // Name of the matched package
+--                \- go.dependency             // Matches a single import
+--                    \- go.dependencies_text  // Name of the matched import
+--                \- go.dependency_factor      // Matches a collective import
+--                    \- go.import_list        // Matches all imports in matchedcollection
+-------------------------------
+
+alias go.import = "import "
+alias go.indent = {"\t" / " "}*
+go.dependencies_text = {!{["] line_end} .}*
+go.dependency = {{go.import ["]} go.dependencies_text {["]}}
+go.import_list = {go.indent ["] go.dependencies_text {["] line_end} .}*
+go.dependencies_factor = {go.import "(" line_end go.import_list}
+alias go.dependencies_pre = {!go.import !line_end .}*
+
+go.package_text = {!statement_end !line_end .}*
+go.package = "package " go.package_text
+
+go.dependencies = {{go.package / go.dependency / go.dependencies_factor / go.dependencies_pre} line_end}*
+
+-------------------------------
+-- Functions
+--
+-- Pattern to match function definitions. Does not
+-- capture function bodies or constructors.
+--
+-- Run: rosie -wholefile go.functions <go-source-file>
+-- Structure: go.functions                     // Parent pattern that matches all function definitions
+--                \- go.function           // Matches an entire function definition
+--                    \- go.function_name      // Name of the function
+--                    \- go.parameters         // Matches a list of parameters
+--                        \- go.single_param   // Matches a parameter in list
+--                    \- go.return             // Matches a list of return values
+--                        \- go.single_return  // Matches a return value in list
+-------------------------------
+
+go.func = "func "
+alias go.start_paren = "("
+alias go.end_paren = ")"
+alias go.whitespace = [:space:]
+
+go.function_name = {!go.start_paren .}*
+go.single_param = {!go.end_paren ![,] .}*
+alias go.multi_param =  {[,] go.single_param }*
+go.parameters = go.start_paren go.single_param go.multi_param go.end_paren
+
+go.single_return = {!go.end_paren ![,] .}*
+alias go.multi_return =  {[,] go.single_return}*
+go.return = go.start_paren go.single_return go.multi_return go.end_paren
+go.function = go.func go.function_name go.parameters? go.return?
+
+go.functions = {go.function / .}*
+
+-------------------------------
+-- Structs
+--
+-- Pattern to match struct definitions. Does not
+-- capture struct bodies.
+--
+-- Run: rosie -wholefile go.structs <go-source-file>
+-- Structure: go.structs                     // Parent pattern that matches all struct definitions
+--                \- go.struct           // Matches an entire struct definition
+--                    \- go.struct_name      // Name of the struct
+-------------------------------
+
+alias go.type = "type "
+alias go.struct = "struct "
+go.struct_name = {!go.struct .}*
+
+go.struct = go.type go.struct_name go.struct
+go.structs = {go.struct / .}*
+
+go.file = {go.line_comment / go.block_comment / go.package / go.dependency / go.function / go.struct / .}*

@@ -1,0 +1,181 @@
+alias js.seperator = ","
+alias js.start_paren = "("
+alias js.end_paren = ")"
+alias js.start_block = "{"
+alias js.end_block = "}"
+alias js.whitespace = [:space:]
+
+---------------------------------------------------------------------
+-- String Literals
+--Catches strings in the file any text inside the charactesrs " x "
+-- Also catches  \" to continue matching the string if  " is escaped
+--
+-- Run : rosie -wholefile "js.strings" <javascript-source-file>
+-- Structure : js.strings                       // Parent pattern to extract all strings from file
+--                \- js.strings_text            // Matches the text enclosed within "" and ''
+---------------------------------------------------------------------
+alias js.string_start = ["] / [']
+js.string_text = { !js.string_start {"\\\"" / "\\\'" /.}}*
+js.string = { js.string_start js.string_text js.string_start }
+js.strings = { js.string / .}*
+
+---------------------------------------------------------------------
+-- Inline Comments
+-- Matches in line comments starting with a '//'. Also
+-- captures the code preceding the comment on the same line.
+--
+-- Run: rosie -wholefile "js.line_comments" <javascript-source-file>
+-- Structure: js.line_comments                      // Parent pattern to extract all line comments from file
+--                \- js.line_comment                // Matches a single line comment
+--                    \- js.line_comment_context    // The code on the line preceding the comment
+--                    \- js.line_comment_body       // Matches the whole comment text
+--                        \- js.line_comment_text   // The text of the comment
+---------------------------------------------------------------------
+alias js.line_comment_start= "//"
+js.line_comment_text= {!line_end .}*
+alias js.line_comment_pre= {!js.line_comment_start !line_end .}*
+js.line_comment_context= {!js.line_comment_start !line_end .}*
+js.line_comment_body= {js.line_comment_start js.line_comment_text}
+js.line_comment= {js.line_comment_context js.line_comment_body}
+js.line_comments= {{js.line_comment / js.line_comment_body / js.line_comment_pre} .}*
+
+alias js.alias_line_comment_start= "//"
+alias js.alias_line_comment_text= {!line_end .}*
+alias js.alias_line_comment_pre= {!js.alias_line_comment_start !line_end .}*
+alias js.alias_line_comment_context= {!js.alias_line_comment_start !line_end .}*
+alias js.alias_line_comment_body= {js.alias_line_comment_start js.alias_line_comment_text}
+alias js.alias_line_comment= {js.alias_line_comment_context js.alias_line_comment_body}
+alias js.alias_line_comments= {js.line_comment / .}*
+
+---------------------------------------------------------------------
+--Block Comments
+-- Matches in line comments starting with a '/*' '*/'. Also
+-- captures the code preceding the comment on the same line.
+--
+-- Run: rosie -wholefile "js.block_comments" <javascript-source-file>
+-- Structure: js.block_comments                      // Parent pattern to extract all block comments from file
+--                \- js.block_comment                // Matches a single block comment
+--                    \- js.block_comment_pre        // The code on the text preceding the comment
+--                    \- js.block_comment_body       // Matches the whole block comment text
+---------------------------------------------------------------------
+alias js.block_comment_start = "/*"
+alias js.block_comment_end = "*/"
+alias js.block_comment_pre= {!js.block_comment_start.}*
+js.block_comment_body= {!js.block_comment_end .}*
+js.block_comment= { js.block_comment_start js.block_comment_body js.block_comment_end}
+js.block_comments= {js.block_comment_pre js.block_comment }*
+
+alias js.alias_block_comment_start = "/*"
+alias js.alias_block_comment_end = "*/"
+alias js.alias_block_comment_pre= {!js.alias_block_comment_start.}*
+alias js.alias_block_comment_body= {!js.alias_block_comment_end .}*
+alias js.alias_block_comment= { js.alias_block_comment_start js.alias_block_comment_body js.alias_block_comment_end}
+alias js.alias_block_comments= {js.alias_block_comment_pre js.alias_block_comment }*
+
+---------------------------------------------------------------------
+-- Dependencies
+-- Matches all the import statements present in the source file
+-- Run: rosie -wholefile "js.line_comments" <javascript-source-file>
+-- Structure: js.dependencies                           // Parent pattern to extract all import statements from file
+--                \- js.dependencies_pre                // Code other than dependencies
+--                \- js.dependency                      // Matches a single line comment
+--                    \- js.dependencies_lonemember     // Matches import statement with one member
+--                        \- js.member                  // The member that is imported
+--                            \- js.member_text         // The member name
+--                    \- js.dependencies_multimember    // Matches import statement with multiple members
+--                        \- js.multi_members           // The multiple members imported
+--                            \- js.member              // A member of the multi_members
+--                                \- js.member_text     // The member name
+--                    \- js.dependencies_module         // Matches import statement with just module name
+--                        \- js.module_text             // The module name
+---------------------------------------------------------------------
+alias js.import = "import "
+alias js.from = " from "
+alias js.as = " as "
+alias js.comma = [,]
+alias js.brace_start = {"{"}
+alias js.brace_end = {"}"}
+js.member_alias = { !js.brace_end !js.comma !js.from !statement_end !line_end  .}*
+js.member_name = { !js.brace_end !js.comma !js.as !js.from !statement_end !line_end  .}*
+alias js.member_alias_text = js.as js.member_alias
+js.member = { js.member_name js.member_alias_text? }
+alias js.member_text = { js.brace_start? js.member js.brace_end? }
+
+js.module = { !statement_end !line_end .}*
+alias js.module_text = {js.module}
+
+alias js.dependencies_lonemember = {js.import js.member_text js.from js.module_text }
+
+js.dependencies_module = {js.import js.module_text}
+js.multi_members = {js.member {js.comma js.member_text}* }
+alias js.dependencies_multimember = {js.import js.multi_members js.from js.module_text}
+alias js.dependencies_pre = {!js.import !line_end .}*
+
+js.dependency = {js.dependencies_lonemember / js.dependencies_multimember / js.dependencies_module}
+
+js.dependencies = { { js.dependency / js.dependencies_pre} {line_end / statement_end}}*
+
+---------------------------------------------------------------------
+-- Function Definitions
+-- Catches function calls present in the file
+-- Run: rosie -wholefile "js.line_comments" <javascript-source-file>
+-- Structure: js.functions                              // Parent pattern to extract all function calls
+--                \- js.function_call                   // Catches a function call
+--                     \- js.function                   // Catches just the "function" keyword
+--                     \- js.function_name              // Matches the name of the function
+--                     \- js.parameters                 // Matches the parameters for the function call
+--                         \- js.multip_param           // Matches all parameters
+--                             \- js.single_param       // matches a single parameter
+---------------------------------------------------------------------
+
+alias js.pre_function = {statement_end / line_end / [.] / [=] / "return"  . }
+alias js.function_call = {js.pre_function? "function" }
+js.function_name = {!line_end !js.start_paren .}*
+js.single_param = { !js.end_paren ![,] .}+
+alias js.multip_param = (js.single_param ",")* js.single_param
+js.parameters =  "(" js.multip_param? ")"
+
+alias js.function_body_clean = {!js.end_block .}*
+js.function_body = {js.whitespace js.start_block js.function_body_clean js.end_block}
+js.function =  js.function_call  js.function_name js.parameters
+
+js.functions = { js.alias_line_comment / js.alias_block_comment / js.function / .}*
+
+---------------------------------------------------------------------
+-- Exceptions
+-- Throw statements are caught with this pattern
+-- Run: rosie -wholefile "js.exceptions" <javascript-source-file>
+-- Structure: js.exceptions                              // All Exceptions statements
+--                \- js.throw                            // The "throw" keyword
+--                \- js.new                              // If "new" is present
+--                \- js.exception                        // The exception name
+---------------------------------------------------------------------
+alias js.throw = "throw "
+alias js.new = "new "
+js.exception = { !statement_end .}*
+js.exceptions = {{ js.throw js.new? js.exception statement_end } / .}*
+
+-------------------------------
+-- Classes
+--
+-- Pattern to match class definitions. Does not
+-- capture class bodies.
+--
+-- Run: rosie -wholefile js.classes <java-source-file>
+-- Structure: js.classes                                // Parent pattern that matches all class definitions
+--                \- js.class_definition                // Matches an entire class definition
+--                   \- js.class                        // The word "class"
+--                   \- js.class_name                   // The name of the class being matched
+--                     \- js.parameters                 // Matches the parameters for the function call
+--                         \- js.multip_param           // Matches all parameters
+--                             \- js.single_param       // matches a single parameter
+--                   \- js.extends                      // The word "extends"
+-------------------------------
+alias js.class_identifier = "class"
+alias js.extends = "extends"
+js.class_name = { !js.start_block !js.start_paren !js.extends .}*
+js.class = js.class_identifier js.class_name js.parameters? {js.extends js.class_name}? js.start_block
+
+js.classes = { js.class / . }*
+
+js.file = {js.line_comment / js.block_comment / js.string / js.dependency / js.function / js.class / .}*

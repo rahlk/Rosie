@@ -1,0 +1,229 @@
+-------------------------------
+--String Literals
+--
+--Currently matches for typical java string and character literals.
+--Does allow for escaped single and double quotes
+--A "aliased" version is provided to allow for suppressed output in other patterns
+-- Run: rosie -wholefile java.strings <java-source-file>
+-- Structure: java.strings                      // Parent pattern to extract all strings from file
+--              \- java.string                  // Matches a single java string
+--            java.characters                   // Parent pattern to match all character literals from file
+--              \- java.character               // Matches a single java character
+-- NOTE java.strings and java.characters are defined AFTER inline comments to allow for
+--      commented strings to be ignored.
+-------------------------------
+alias java.alias_string = ["] {([\\] / !["]) .}* ["]
+java.string = ["] {([\\] / !["]) .}* ["]
+
+alias java.alias_character = ['] {([\\] / ![']) .} [']
+java.character =  ['] {([\\] / ![']) .} [']
+
+-------------------------------
+-- Inline Comments
+--
+-- Matches for inline java comments starting with "//".
+-- Output provides the context of the comment i.e. the text listed on the same line,
+-- Values escaped within string literals are ignored.
+--
+-- Run: rosie -wholefile java.line_comments <java-source-file>
+-- Structure: java.line_comments                      // Parent pattern to extract all comments from file
+--                \- java.line_comment                // Matches a single line comment
+--                    \- java.line_comment_context    // The code on the line preceding the comment
+--                    \- java.line_comment_body       // Matches the whole comment text
+--                        \- java.line_comment_text   // The text of the comment
+-------------------------------
+
+alias java.line_comment_start= "//"
+java.line_comment_text= {!line_end .}*
+alias java.line_comment_pre= {java.alias_string? !java.line_comment_start !line_end .}*
+java.line_comment_context= {java.alias_string? !java.line_comment_start !line_end .}*
+java.line_comment_body= {java.line_comment_start java.line_comment_text}
+java.line_comment= {java.line_comment_context java.line_comment_body}
+java.line_comments= {java.line_comment / .}*
+
+alias java.alias_line_comment_start= "//"
+alias java.alias_line_comment_text= {!line_end .}*
+alias java.alias_line_comment_pre= {java.alias_string? !java.alias_line_comment_start !line_end .}*
+alias java.alias_line_comment_context= {java.alias_string? !java.alias_line_comment_start !line_end .}*
+alias java.alias_line_comment_body= {java.alias_line_comment_start java.alias_line_comment_text}
+alias java.alias_line_comment= {java.alias_line_comment_context java.alias_line_comment_body}
+
+-------------------------------
+-- Block Comments
+--
+-- Matches for java block comments starting with "/*" and ending with "*/".
+-- Output simply provides the contents of the comment.
+--
+-- Run: rosie -wholefile java.block_comments <java-source-file>
+-- Structure: java.block_comments                  // Parent pattern to match all block comments
+--                \- java.block_comment            // Matches a single block comment
+--                    \- java.block_comment_body   // Matches the body of a block comment
+-------------------------------
+
+alias java.block_comment_start = "/*"
+alias java.block_comment_end = "*/"
+alias java.block_comment_pre= {!java.block_comment_start .}*
+java.block_comment_body= {!java.block_comment_end .}*
+java.block_comment= {java.block_comment_start java.block_comment_body java.block_comment_end}
+java.block_comments= {java.block_comment_pre java.block_comment }*
+
+alias java.alias_block_comment_start = "/*"
+alias java.alias_block_comment_end = "*/"
+alias java.alias_block_comment_pre= {!java.alias_block_comment_start .}*
+alias java.alias_block_comment_body= {!java.alias_block_comment_end .}*
+alias java.alias_block_comment= {java.alias_block_comment_start java.alias_block_comment_body java.alias_block_comment_end}
+
+java.strings = {java.alias_line_comment / java.alias_block_comment / java.string / .}*
+java.characters = {java.alias_line_comment / java.alias_block_comment / java.character / .}*
+
+-------------------------------
+-- Dependencies
+--
+-- Matches dependencies declared with "import" and
+-- packages listed with "package".
+--
+-- Run: rosie -wholefile java.dependencies <java-source-file>
+-- Structure: java.dependencies                  // Parent pattern to match all dependencies in a file
+--                \- java.package                // Matches a single package
+--                    \- java.package_text       // Name of the matched package
+--                \- java.dependency             // Matches a single import
+--                    \- java.dependencies_text  // Name of the matched import
+-------------------------------
+
+alias java.space = " "
+alias java.import = "import "
+java.static = "static "
+java.dependency_text = {!java.space !statement_end !line_end .}*
+java.dependency = {java.import java.space* java.static? java.dependency_text java.space*}
+alias java.dependencies_pre = {!java.import !line_end .}*
+
+java.package_text = {!statement_end !line_end .}*
+java.package = {"package " java.package_text}
+
+java.dependencies = {{{java.package / java.dependency} / java.dependencies_pre} {statement_end / line_end}}*
+
+-------------------------------
+-- Functions
+--
+-- Pattern to match function definitions. Does not
+-- capture function bodies or constructors.
+--
+-- Run: rosie -wholefile java.functions <java-source-file>
+-- Structure: java.functions                     // Parent pattern that matches all function definitions
+--                \- java.function               // Matches an entire function definition
+--                    \- java.access_sp          // Access specifier (public, private, protected)
+--                    \- java.return_type        // Return type of function
+--                    \- java.function_name      // Name of the function
+--                    \- java.parameters         // Matches a list of parameters
+--                        \- java.single_param   // Matches a parameter in list
+--                    \- java.exceptions         // Matches list of exceptions thrown by function
+--                        \- java.single_excep   // Matches an exception in list
+-------------------------------
+
+alias java.seperator = ","
+alias java.start_paren = "("
+alias java.end_paren = ")"
+alias java.start_block = "{"
+alias java.end_block = "}"
+alias java.whitespace = [:space:]
+alias java.invalid_identifier = [^ [:alnum:][_][$][<>]]
+alias java.throws = "throws "
+
+java.access_sp = "public " / "private " / "protected "
+java.return_type = {!java.access_sp {!java.invalid_identifier .}+ java.whitespace}
+java.function_name = {!java.start_paren !java.invalid_identifier .}+
+
+java.single_param = {!java.end_paren ![,] .}*
+alias java.multi_param = {[,] java.single_param}*
+java.parameters = {java.start_paren java.single_param java.multi_param java.end_paren java.whitespace+}
+
+java.single_excep = {!java.whitespace ![,] .}*
+alias java.multi_excep = {[,] java.whitespace* java.single_excep}*
+java.exceptions = {java.throws java.single_excep java.multi_excep java.whitespace+}
+
+java.function_body = {java.whitespace* java.start_block line_end {!java.end_block .}* java.end_block}
+
+java.function = (java.access_sp? java.static? java.return_type java.function_name java.parameters java.exceptions? java.start_block)
+
+
+java.functions = {java.function / .}*
+
+-------------------------------
+-- Classes
+--
+-- Pattern to match class definitions. Does not
+-- capture class bodies.
+--
+-- Run: rosie -wholefile java.classes <java-source-file>
+-- Structure: java.classes                         // Parent pattern that matches all class definitions
+--                \- java.class                    // Matches an entire class definition
+--                    \- java.access_sp            // Access specifier (public, private, protected)
+--                    \- java.class_name           // Name of the class
+--                    \- java.hierarcy             // Does the class have a parent?
+--                        \- java.parent_name      // Matches the parent name
+--                    \- java.implementation       // Does the class implement an interface?
+--                        \- java.interface_name   // Matches the interface name
+-------------------------------
+
+alias java.class = "class "
+alias java.extends = "extends "
+alias java.implements = "implements "
+java.final = "final "
+
+java.class_name = {!java.invalid_identifier .}+
+java.parent_name = {!java.invalid_identifier .}+
+java.interface_name = {!java.invalid_identifier .}+
+java.single_inter = {!{java.whitespace java.start_block} ![,] .}+
+alias java.multi_inter = {[,] java.single_inter}*
+java.hierarchy = {java.whitespace* java.extends java.parent_name}
+java.implementation = {java.whitespace* java.implements java.single_inter java.multi_inter java.whitespace java.start_block}
+
+--java.class_body = {java.whitespace* java.start_block line_end {!java.end_block .}* java.end_block}
+java.class = {line_end? java.whitespace* java.access_sp? java.static? java.final? java.class java.class_name java.hierarchy? java.implementation?}
+
+java.classes = {java.class / .}*
+
+-------------------------------
+-- Error Handling
+--
+-- Pattern to match "throws" and "try/catch" statements.
+--
+-- Run: rosie -wholefile java.errors <java-source-file>
+-- Structure: java.classes                         // Parent pattern that matches all class definitions
+--                \- java.class                    // Matches an entire class definition
+--                    \- java.access_sp            // Access specifier (public, private, protected)
+--                    \- java.class_name           // Name of the class
+--                    \- java.hierarcy             // Does the class have a parent?
+--                        \- java.parent_name      // Matches the parent name
+--                    \- java.implementation       // Does the class implement an interface?
+--                        \- java.interface_name   // Matches the interface name
+-------------------------------
+
+alias java.throws = "throws "
+alias java.throw_new = "throw new "
+alias java.try = "try"
+alias java.catch = "catch"
+
+java.single_throws = {!java.start_block ![,] .}+
+alias java.multi_throws = {[,] java.single_throws}*
+java.throws_name = {java.single_throws java.multi_throws}*
+java.throws_exception = {java.throws java.throws_name}
+
+java.new_exception = {!statement_end .}*
+java.throw_new_exception = {java.throw_new java.new_exception}
+
+alias java.try_call = {java.try java.whitespace+ java.start_block line_end?}
+alias java.end_try_block = {java.end_block java.whitespace+ @java.catch}
+java.try_body = {!java.end_try_block .}*
+java.try_block = {java.try_call java.try_body}
+
+java.catch_variable = {!java.end_paren .}*
+java.catch_name = {{!java.whitespace .}* java.whitespace}
+java.catch_exception = {java.catch java.whitespace+ java.start_paren java.catch_name java.catch_variable java.end_paren java.whitespace+ java.start_block}
+java.catch_body = {!java.end_block .}*
+java.catch_block = {java.catch_exception java.catch_body}
+
+java.error = {java.throws_exception / java.throw_new_exception / java.try_block / java.catch_block}
+java.errors = {java.error / .}*
+
+java.file = {java.line_comment / java.block_comment / java.string / java.package / java.dependency / java.function / java.class / .}*

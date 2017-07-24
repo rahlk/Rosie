@@ -1,0 +1,1 @@
+{"go.dependencies":{"text":"package main\n\n\t\n\nimport \"fmt\"\n\n\t\n\nfunc main() {\n    fmt.Println(\"hello world\")\n}\n\n","subs":[{"go.package":{"text":"package main","subs":[{"go.package_text":{"text":"main","pos":9}}],"pos":1}},{"go.dependency":{"text":"import \"fmt\"","subs":[{"go.dependencies_text":{"text":"fmt","pos":26}}],"pos":18}}],"pos":1}}

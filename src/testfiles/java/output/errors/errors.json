@@ -1,0 +1,146 @@
+{
+    "java.errors": {
+        "text": "package simulator;\n\nimport java.io.BufferedReader;\nimport java.io.IOException;\nimport java.io.InputStreamReader;\nimport java.util.ArrayList;\nimport java.util.Collections;\nimport java.util.HashMap;\nimport java.util.List;\nimport java.util.Map;\n\n/**\n *\n * @author alex_liao\n *\n *         Copyright (c) 2017 Alexander Liao\n *\n *         Permission is hereby granted, free of charge, to any person obtaining\n *         a copy of this software and associated documentation files (the\n *         \"Software\"), to deal in the Software without restriction, including\n *         without limitation the rights to use, copy, modify, merge, publish,\n *         distribute, sublicense, and/or sell copies of the Software, and to\n *         permit persons to whom the Software is furnished to do so, subject to\n *         the following conditions:\n *\n *         The above copyright notice and this permission notice shall be\n *         included in all copies or substantial portions of the Software.\n *\n *         THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n *         EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\n *         MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\n *         NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS\n *         BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN\n *         ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\n *         CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n *         SOFTWARE.\n */\n\npublic class Simulator {\n\tprivate static final Map<Integer, Ball> balls = new HashMap<>();\n\tprivate static int layers, length;\n\n\tpublic static void main(final String[] args) throws IOException, FileNotFoundException {\n\t\tBufferedReader reader = new BufferedReader(new InputStreamReader(System.in));\n\t\tboolean output_states$ = true, debug$ = false;\n\t\tlong delay = 0;\n\t\tfor (int i = 0; i < args.length; i++) {\n\t\t\tString arg = args[i];\n\t\t\tif (arg.equals(\"--ignore-states\") || arg.equals(\"-i\")) {\n\t\t\t\toutput_states$ = false;\n\t\t\t} else if (arg.equals(\"--debug\") || arg.equals(\"-d\")) {\n\t\t\t\tdebug$ = true;\n\t\t\t} else if (arg.equals(\"--wait\") || arg.equals(\"-w\")) {\n\t\t\t\tdelay = Long.parseLong(args[++i]);\n\t\t\t}\n\t\t}\n\t\tfinal boolean output_states = output_states$;\n\t\tfinal boolean debug = debug$;\n\t\tfinal List<String> layers = new ArrayList<>();\n\t\tString layer;\n\t\twhile (true) {\n\t\t\tlayer = reader.readLine();\n\t\t\tif (layer.contains(\"#\")) {\n\t\t\t\tlayer = layer.substring(0, layer.indexOf(\"#\"));\n\t\t\t\tthrow new FileNotFoundException();\n\t\t\t}\n\t\t\tif (layer.isEmpty()) {\n\t\t\t\tbreak;\n\t\t\t} else {\n\t\t\t\tlayers.add(layer);\n\t\t\t}\n\t\t}\n\t\tSimulator.layers = layers.size();\n\t\tint length = layers.get(0).length();\n\t\tfor (int i = 1; i < layers.size(); i++) {\n\t\t\tint l = layers.get(i).length();\n\t\t\tlength = length > l ? length : l;\n\t\t}\n\t\tSimulator.length = length;\n\t\tfinal int[][] hidden_layers = new int[layers.size()][];\n\t\tfinal int[][] metadata = new int[layers.size()][length];\n\t\tfinal int[][] mem = new int[layers.size()][length];\n\t\tfinal boolean[][] mf = new boolean[layers.size()][length];\n\t\tfinal boolean[][] mem_lock = new boolean[layers.size()][length];\n\n\t\tRuntime.getRuntime().addShutdownHook(new Thread(() -> {\n\t\t\tfor (int i = 0; i < Simulator.layers; i++) {\n\t\t\t\tfor (int j = 0; j < Simulator.length; j++) {\n\t\t\t\t\tif (layers.get(i).charAt(j) == '$') {\n\t\t\t\t\t\tSystem.out.println(hidden_layers[i][j]);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tif (debug) {\n\t\t\t\tfor (int[][] array : new int[][][] { hidden_layers, metadata, mem }) {\n\t\t\t\t\tfor (int[] row : array) {\n\t\t\t\t\t\tfor (int e : row) {\n\t\t\t\t\t\t\tSystem.out.print(e);\n\t\t\t\t\t\t}\n\t\t\t\t\t\tSystem.out.println();\n\t\t\t\t\t}\n\t\t\t\t\tSystem.out.println(\"\\n\\n\");\n\t\t\t\t}\n\t\t\t}\n\t\t}));\n\n\t\tfor (int i = 0; i < layers.size(); i++) {\n\t\t\tStringBuffer string = new StringBuffer(length);\n\t\t\tstring.append(layers.get(i));\n\t\t\tfor (int j = 0; j < length - layers.get(i).length(); j++) {\n\t\t\t\tstring.append(' ');\n\t\t\t}\n\t\t\tlayers.set(i, string.toString());\n\t\t}\n\t\tfor (int i = 0; i < layers.size(); i++) {\n\t\t\tlayer = layers.get(i);\n\t\t\tint[] hidden_layer = new int[layer.length()];\n\t\t\tfor (int j = 0; j < layer.length(); j++) {\n\t\t\t\tchar character = layer.charAt(j);\n\t\t\t\tif (character >= '0' && character <= '9') {\n\t\t\t\t\tcreateBall(i, j, character - '0');\n\t\t\t\t} else if (character == '⇓') {\n\t\t\t\t\tint value;\n\t\t\t\t\tif ((value = Integer.parseInt(reader.readLine().trim())) != 0) {\n\t\t\t\t\t\tcreateBall(i, j, value);\n\t\t\t\t\t}\n\n\t\t\t\t} else if (character == '⇩') {\n\t\t\t\t\tfor (char value : reader.readLine().toCharArray()) {\n\t\t\t\t\t\tcreateBall(i, j, value);\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\thidden_layers[i] = hidden_layer;\n\t\t}\n\n\t\twhile (keepRunning()) {\n\t\t\tfor (long time = 0; time < delay; time++) {\n\t\t\t\ttry {\n\t\t\t\t\tThread.sleep(1);\n\t\t\t\t} catch (InterruptedException e) {\n\t\t\t\t\te.printStackTrace();\n\t\t\t\t\ttime--;\n\t\t\t\t}\n\t\t\t}\n\t\t\tif (debug) {\n\t\t\t\tSystem.out.println(balls);\n\t\t\t\tString command = reader.readLine();\n\t\t\t\tif (command.equals(\"expand\")) {\n\t\t\t\t\tchar[][] chars = new char[Simulator.layers * 2][Simulator.length * 2];\n\t\t\t\t\tfor (int i = 0; i < layers.size(); i++) {\n\t\t\t\t\t\tfor (int j = 0; j < layers.get(i).length(); j++) {\n\t\t\t\t\t\t\tchars[i * 2][j * 2] = layers.get(i).charAt(j);\n\t\t\t\t\t\t\tchars[i * 2][j * 2 + 1] = ' ';\n\t\t\t\t\t\t\tchars[i * 2 + 1][j * 2 + 1] = ' ';\n\t\t\t\t\t\t\tchars[i * 2 + 1][j * 2] = ' ';\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\tfor (Ball ball : balls.values()) {\n\t\t\t\t\t\ttry {\n\t\t\t\t\t\t\tchars[ball.getLayer() * 2 + 1][ball.getColumn() * 2 + 1] = 'o';\n\t\t\t\t\t\t} catch (ArrayIndexOutOfBoundsException e) {\n\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\tfor (char[] row : chars) {\n\t\t\t\t\t\tfor (char e : row) {\n\t\t\t\t\t\t\tSystem.out.print(e);\n\t\t\t\t\t\t}\n\t\t\t\t\t\tSystem.out.println();\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t\tList<Integer> keys = new ArrayList<>(balls.keySet());\n\t\t\tCollections.sort(keys);\n\t\t\tfor (Integer id : keys) {\n\t\t\t\tBall ball = balls.get(id);\n\t\t\t\tif (ball == null) {\n\t\t\t\t} else if (!valid(ball)) {\n\t\t\t\t\tballs.remove(ball.getName());\n\t\t\t\t} else {\n\t\t\t\t\tchar space = layers.get(ball.getLayer()).charAt(ball.getColumn());\n\n\t\t\t\t\tif (space == '|') {\n\t\t\t\t\t\tSystem.out.print(\"\"); /* debug */\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\n\tpublic static boolean emptyLayer(int layer) {\n\t\tfor (Ball ball : balls.values()) {\n\t\t\tif (ball.getLayer() == layer) {\n\t\t\t\treturn false;\n\t\t\t}\n\t\t}\n\t\treturn true;\n\t}\n\n\tpublic static boolean valid(Ball ball) {\n\t\treturn ball.getLayer() >= 0 && ball.getLayer() < layers && ball.getColumn() >= 0 && ball.getColumn() < length;\n\t}\n\n\tpublic static boolean keepRunning() {\n\t\tfor (Ball ball : balls.values()) {\n\t\t\tif (ball.getLayer() >= 0 && ball.getLayer() < layers && ball.getColumn() >= 0\n\t\t\t\t\t&& ball.getColumn() < length) {\n\t\t\t\treturn true;\n\t\t\t}\n\t\t}\n\t\treturn false;\n\t}\n\n\tpublic static Ball createBall(int layer, int column, int value) {\n\t\tint k = 0;\n\t\twhile (balls.containsKey(k)) {\n\t\t\tk++;\n\t\t}\n\t\tBall ball;\n\t\tballs.put(k, ball = new Ball(k, layer, column, value));\n\t\treturn ball;\n\t}\n\n\tpublic static final class Ball {\n\t\tprivate int name;\n\t\tprivate int layer;\n\t\tprivate int column;\n\t\tprivate int direction;\n\t\tprivate int levitating;\n\t\tprivate int value;\n\n\t\tpublic Ball(int name, int layer, int column, int value) {\n\t\t\tthis.setName(name);\n\t\t\tthis.setLayer(layer);\n\t\t\tthis.setColumn(column);\n\t\t\tthis.setDirection(0);\n\t\t\tthis.setLevitating(-1);\n\t\t\tthis.setValue(value);\n\t\t}\n\n\t\tpublic String toString() {\n\t\t\treturn \"Ball \" + getName() + \": [\" + getLayer() + \", \" + getColumn() + \"]: \" + getValue() + \" (\\'\"\n\t\t\t\t\t+ (char) getValue() + \"\\')\";\n\t\t}\n\t}\n\n\tpublic interface Operator<T, U, R> {\n\t\tpublic R operate(T x, U y);\n\n\t\t@SuppressWarnings(\"serial\")\n\t\tMap<Character, Operator<Integer, Integer, Integer>> operators = new HashMap<Character, Operator<Integer, Integer, Integer>>() {\n\t\t\t{\n\t\t\t\tput('+', (x, y) -> (x + y));\n\t\t\t\tput('-', (x, y) -> (x - y));\n\t\t\t\tput('*', (x, y) -> (x * y));\n\t\t\t\tput('|', (x, y) -> (x == 0 && y == 0) ? 0 : 1);\n\t\t\t\tput('&', (x, y) -> (x == 0 || y == 0) ? 0 : 1);\n\t\t\t}\n\t\t};\n\n\t\t@SuppressWarnings(\"serial\")\n\t\tMap<Character, Operator<Integer, Integer, Boolean>> comparators = new HashMap<Character, Operator<Integer, Integer, Boolean>>() {\n\t\t\t{\n\t\t\t\tput('>', (x, y) -> (x > y));\n\t\t\t\tput('<', (x, y) -> (x < y));\n\t\t\t\tput('≥', (x, y) -> (x >= y));\n\t\t\t\tput('≤', (x, y) -> (x <= y));\n\t\t\t\tput('=', (x, y) -> (x == y));\n\t\t\t}\n\t\t};\n\t}\n}\n",
+        "subs": [
+            {
+                "java.throws_exception": {
+                    "text": "throws IOException, FileNotFoundException ",
+                    "subs": [
+                        {
+                            "java.throws_name": {
+                                "text": "IOException, FileNotFoundException ",
+                                "subs": [
+                                    {
+                                        "java.single_throws": {
+                                            "text": "IOException",
+                                            "pos": 1723
+                                        }
+                                    },
+                                    {
+                                        "java.single_throws": {
+                                            "text": " FileNotFoundException ",
+                                            "pos": 1735
+                                        }
+                                    }
+                                ],
+                                "pos": 1723
+                            }
+                        }
+                    ],
+                    "pos": 1716
+                }
+            },
+            {
+                "java.throw_new_exception": {
+                    "text": "throw new FileNotFoundException()",
+                    "subs": [
+                        {
+                            "java.new_exception": {
+                                "text": "FileNotFoundException()",
+                                "pos": 2534
+                            }
+                        }
+                    ],
+                    "pos": 2524
+                }
+            },
+            {
+                "java.try_block": {
+                    "text": "try {\n\t\t\t\t\tThread.sleep(1);\n\t\t\t\t",
+                    "subs": [
+                        {
+                            "java.try_body": {
+                                "text": "\t\t\t\t\tThread.sleep(1);\n\t\t\t\t",
+                                "pos": 4686
+                            }
+                        }
+                    ],
+                    "pos": 4680
+                }
+            },
+            {
+                "java.catch_block": {
+                    "text": "catch (InterruptedException e) {\n\t\t\t\t\te.printStackTrace();\n\t\t\t\t\ttime--;\n\t\t\t\t",
+                    "subs": [
+                        {
+                            "java.catch_exception": {
+                                "text": "catch (InterruptedException e) {",
+                                "subs": [
+                                    {
+                                        "java.catch_name": {
+                                            "text": "InterruptedException ",
+                                            "pos": 4721
+                                        }
+                                    },
+                                    {
+                                        "java.catch_variable": {
+                                            "text": "e",
+                                            "pos": 4742
+                                        }
+                                    }
+                                ],
+                                "pos": 4714
+                            }
+                        },
+                        {
+                            "java.catch_body": {
+                                "text": "\n\t\t\t\t\te.printStackTrace();\n\t\t\t\t\ttime--;\n\t\t\t\t",
+                                "pos": 4746
+                            }
+                        }
+                    ],
+                    "pos": 4714
+                }
+            },
+            {
+                "java.try_block": {
+                    "text": "try {\n\t\t\t\t\t\t\tchars[ball.getLayer() * 2 + 1][ball.getColumn() * 2 + 1] = 'o';\n\t\t\t\t\t\t",
+                    "subs": [
+                        {
+                            "java.try_body": {
+                                "text": "\t\t\t\t\t\t\tchars[ball.getLayer() * 2 + 1][ball.getColumn() * 2 + 1] = 'o';\n\t\t\t\t\t\t",
+                                "pos": 5339
+                            }
+                        }
+                    ],
+                    "pos": 5333
+                }
+            },
+            {
+                "java.catch_block": {
+                    "text": "catch (ArrayIndexOutOfBoundsException e) {\n\n\t\t\t\t\t\t",
+                    "subs": [
+                        {
+                            "java.catch_exception": {
+                                "text": "catch (ArrayIndexOutOfBoundsException e) {",
+                                "subs": [
+                                    {
+                                        "java.catch_name": {
+                                            "text": "ArrayIndexOutOfBoundsException ",
+                                            "pos": 5425
+                                        }
+                                    },
+                                    {
+                                        "java.catch_variable": {
+                                            "text": "e",
+                                            "pos": 5456
+                                        }
+                                    }
+                                ],
+                                "pos": 5418
+                            }
+                        },
+                        {
+                            "java.catch_body": {
+                                "text": "\n\n\t\t\t\t\t\t",
+                                "pos": 5460
+                            }
+                        }
+                    ],
+                    "pos": 5418
+                }
+            }
+        ],
+        "pos": 1
+    }
+}

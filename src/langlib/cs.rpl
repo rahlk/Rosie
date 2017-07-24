@@ -1,0 +1,154 @@
+-------------------------------
+-- Inline Comments
+--
+-- Matches in line comments starting with a '//'. Also
+-- captures the code preceeding the comment on the same line.
+--
+-- Run: rosie -wholefile cs.line_comments <C#-source-file>
+-- Structure: cs.line_comments                      // Parent pattern to extract all comments from file
+--                \- cs.line_comment                // Matches a single line comment
+--                    \- cs.line_comment_context    // The code on the line preceeding the comment
+--                    \- cs.line_comment_body       // Matches the whole comment text
+--                        \- cs.line_comment_text   // The text of the comment
+-------------------------------
+
+alias cs.line_comment_start= "//"
+cs.line_comment_text= {!line_end .}*
+alias cs.line_comment_pre= {!cs.line_comment_start !line_end .}*
+cs.line_comment_context= {!cs.line_comment_start !line_end .}*
+cs.line_comment_body= {cs.line_comment_start cs.line_comment_text}
+cs.line_comment= {cs.line_comment_body line_end}
+cs.line_comments= {cs.line_comment .}*
+
+-- Aliased version of pattern for use in other patterns
+alias cs.alias_line_comment_text= {!line_end .}*
+alias cs.alias_line_comment_context= {!cs.line_comment_start !line_end .}*
+alias cs.alias_line_comment_body= {cs.line_comment_start cs.alias_line_comment_text}
+alias cs.alias_line_comment= {cs.alias_line_comment_context cs.alias_line_comment_body}
+alias cs.alias_line_comment= {cs.alias_line_comment_context cs.alias_line_comment_body}
+
+-------------------------------
+-- Block Comments
+--
+-- Matches block comments starting with "/*"
+-- and ending with "*/".
+--
+-- Run: rosie -wholefile cs.block_comments <ruby-source-file>
+-- Structure: rb.block_comments           // Parent pattern to match all block comments
+--                \- rb.block_comment     // Matches a single block comment
+--                    \- rb.comment_body  // Matches the body of a block comment
+-------------------------------
+
+alias cs.block_comment_start = "/*"
+alias cs.block_comment_end = "*/"
+alias cs.block_comment_pre= {!cs.block_comment_start.}*
+cs.block_comment_body= {!cs.block_comment_end .}*
+cs.block_comment= { cs.block_comment_start cs.block_comment_body cs.block_comment_end}
+
+cs.block_comments= {cs.block_comment_pre cs.block_comment }*
+
+-- Aliased version of the pattern for use in other patterns
+alias cs.alias_block_comment_body= {!cs.block_comment_end .}*
+alias cs.alias_block_comment = { cs.block_comment_start cs.alias_block_comment_body cs.block_comment_end}
+
+-------------------------------
+-- String Literals
+--
+-- Currently matches for typical C# string and character literals.
+-- Does allow for escaped single and double quotes
+--
+-- Run: rosie -wholefile cs.strings <C#-source-file>
+-- Structure: cs.strings        // Parent pattern to match all string literals
+--                \- cs.string  // Pattern to match a single string
+-------------------------------
+
+cs.string = (["] {([\\] / !["]) .}* ["]) / (['] {([\\] / ![']) .}* ['])
+cs.strings = {cs.alias_line_comment / cs.alias_block_comment / cs.string / .}*
+
+--A "aliased" version is provided to allow for suppressed output in other patterns
+alias cs.alias_string = (["] {([\\] / !["]) .}* ["]) / (['] {([\\] / ![']) .}* ['])
+
+-------------------------------
+-- Dependencies
+--
+-- Matches the C# dependencies in the file declared
+-- with the "using" keyword.
+--
+-- Run: rosie -wholefile cs.dependencies <C#-source-file>
+-- Structure: cs.dependencies                // Parent pattern to match all dependencies in a file
+--                \- cs.dependency           // Matches a single dependency statement
+--                    \~ cs.alias_statement  // **ALIASED** Captures the dependency alias statement
+--                        \- cs.alias        // Alias for the dependency
+--                        \- cs.type         // Name of the dependency
+--                    \- cs.type             // Name of the dependency
+-------------------------------
+
+alias cs.using = "using "
+alias cs.static = "static "
+cs.type = {!statement_end !line_end .}*
+cs.alias = {!statement_end !line_end !"=" .}*
+alias cs.alias_statement = {cs.alias "= " cs.type}
+cs.dependency = {cs.using cs.static? {cs.alias_statement / cs.type}}
+alias cs.dependencies_pre = {!cs.using !line_end .}*
+
+cs.dependencies = {{cs.dependency / cs.dependencies_pre} {statement_end / line_end}}*
+
+-------------------------------
+-- Functions
+--
+-- Pattern to match all function definitions in a file.
+-- Does not match function bodies and constructors.
+--
+-- Run: rosie -wholefile cs.functions <C#-source-file>
+-- Structure: cs.functions
+--                \- cs.funcdef
+--                    \? cs.accessmod           // **OPTIONAL** the access modifier for the function
+--                    \? cs.mod                 // **OPTIONAL** the modifiers for the function
+--                    \- cs.returntype          // The return type of the function
+--                    \- cs.methodname          // The method name
+--                    \? cs.paramlist           // **OPTIONAL** the list of parameters of the method
+--                        \- cs.param           // The parameters in the param list
+--                            \? cs.parammod    // **OPTIONAL** parameter modifier
+--                            \- cs.paramtype   // Type of the parameter
+--                            \- cs.paramname   // Name of the parameter
+--                            \? cs.defaultval  // **OPTIONAL** Default value of parameter
+-------------------------------
+
+cs.accessmod = "public" / "private" / "internal" / "protected internal" / "protected"
+cs.mod = "abstract" / "async" / "extern" / "override" / "partial" / "static" / "virtual" / "event" / "delegate"
+cs.parammod = "params" / "ref" / "out"
+
+cs.methodname = {!cs.accessmod !cs.mod !"base" [[:alnum:][_]] {![[:space:][()]] .}* }
+cs.returntype = {!cs.accessmod !cs.mod !"base" [[:alnum:][_]] {![[:space:][()]] .}* }
+cs.paramname = {!cs.accessmod !cs.mod !"base" [[:alnum:][_]] {![[:space:][(),]] .}* }
+cs.paramtype = {!cs.accessmod !cs.mod !"base" [[:alnum:][_]] {![[:space:][(),]] .}* }
+cs.defaultval = [^,);]+
+cs.param = cs.parammod? cs.paramtype cs.paramname ("=" cs.defaultval)?
+cs.paramlist = (cs.param ",")* cs.param
+cs.function = cs.accessmod? cs.mod* cs.returntype cs.methodname "(" cs.paramlist? ")" "{"
+cs.functions = {cs.alias_line_comment / cs.alias_block_comment / cs.function / .}*
+
+-------------------------------
+-- Class Defs
+--
+-- Pattern to match all class definitions in a file.
+-- Does not match class bodies.
+--
+-- Run: rosie -wholefile cs.classes <C#-source-file>
+-- Structure: cs.classes                     // Parent pattern for matching all class definitions in a file
+--                \- cs.classdef             // matches a single class definition
+--                    \- cs.classname        // Name of the class
+--                    \- cs.parentclasslist  // List of all parent class of this class
+--                        \- cs.parentclass  // Name of a single C# parent class
+-------------------------------
+
+cs.classname = {!":" !"{" ![:space:] .}+
+cs.parentclass = {!":" !"{" ![:space:] !"," .}+
+cs.parentclasslist = (cs.parentclass ",")* cs.parentclass
+cs.visibility = "public" / "internal"
+cs.declaration = "class" / "interface"
+cs.class = cs.visibility? "sealed"? "abstract"? "partial"? "static"? cs.declaration cs.classname (":" cs.parentclasslist)? "{"
+
+cs.classes = {{!cs.class .}* cs.class .}* {!cs.class .}*
+
+cs.file = {cs.block_comment / cs.line_comment / cs.dependency / cs.class / cs.function / .}*

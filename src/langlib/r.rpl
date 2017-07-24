@@ -1,0 +1,123 @@
+-------------------------------
+-- Inline Comments
+--
+-- Matches in line comments starting with a '#'. Also
+-- captures the code preceding the comment on the same line.
+--
+-- Run: rosie -wholefile r.line_comments <r-source-file>
+-- Structure: r.line_comments                      // Parent pattern to extract all comments from file
+--                \- r.line_comment                // Matches a single line comment
+--                    \- r.line_comment_context    // The code on the line preceding the comment
+--                    \- r.line_comment_body       // Matches the whole comment text
+--                        \- r.line_comment_text   // The text of the comment
+-------------------------------
+
+alias r.line_comment_start= "#"
+r.line_comment_text= {!line_end .}*
+alias r.line_comment_pre= {!r.line_comment_start !line_end .}*
+r.line_comment_context= {!r.line_comment_start !line_end .}*
+r.line_comment_body= r.line_comment_start r.line_comment_text
+r.line_comment= r.line_comment_context r.line_comment_body
+
+-- Aliased version of the pattern for use in other patterns
+alias r.alias_line_comment_start= "#"
+alias r.alias_line_comment_text= {!line_end .}*
+alias r.alias_line_comment_pre= {!r.alias_line_comment_start !line_end .}*
+alias r.alias_line_comment_context= {!r.alias_line_comment_start !line_end .}*
+alias r.alias_line_comment_body= r.alias_line_comment_start r.alias_line_comment_text
+alias r.alias_line_comment= r.alias_line_comment_context r.alias_line_comment_body
+
+r.line_comments= {r.line_comment / .}*
+-------------------------------
+-- String Literals
+--
+-- Currently matches for typical R string and character literals.
+-- Does allow for escaped single and double quotes
+--
+-- Run: rosie -wholefile cs.strings <R-source-file>
+-- Structure: r.strings        // Parent pattern to match all string literals
+--                \- r.string  // Pattern to match a single string
+-------------------------------
+
+r.string = (["] {([\\] / !["]) .}* ["]) / (['] {([\\] / ![']) .}* ['])
+r.strings = {r.alias_line_comment / r.string / .}*
+
+--A "aliased" version is provided to allow for suppressed output in other patterns
+alias r.alias_string = (["] {([\\] / !["]) .}* ["]) / (['] {([\\] / ![']) .}* ['])
+
+-------------------------------
+-- Dependencies
+--
+-- Matches dependencies declared with "source" and "library"
+--
+-- Run: rosie -wholefile r.dependencies <r-source-file>
+-- Structure: r.dependencies                  // Parent pattern to match all dependencies in a file
+--                \- r.library                // Matches a single library
+--                    \- r.dependencies_text  // Name of the matched dependency
+--                \- r.source                 // Matches a single source
+--                    \- r.dependencies_text  // Name of the matched dependency
+-------------------------------
+
+alias r.src = "source"
+alias r.lib = "library"
+r.dependencies_text = {!{")" line_end} .}*
+r.library = {{r.lib "("} r.dependencies_text {")"}}
+r.source = {{r.src "("} r.dependencies_text {")"}}
+alias r.dependencies_pre = {!r.lib !r.src !line_end .}*
+r.dependency = {{r.library / r.source} line_end}
+r.dependencies = {r.dependency / .}*
+
+-------------------------------
+-- Functions
+--
+-- Pattern to match function definitions. Does not
+-- capture function bodies.
+--
+-- Run: rosie -wholefile r.functions <r-source-file>
+-- Structure: r.functions                    // Parent pattern to match all functions in a file
+--                \- r.function              // Matched function definitions
+--                    \- r.function_name     // Matches an entire function
+--                    \- r.parameters        // Matches the parameter list
+--                        \- r.single_param  // Matches a single parameter
+-------------------------------
+
+alias r.assignment = "<- function"
+alias r.whitespace = [:space:]
+alias r.start_paren = "("
+alias r.end_paren = ")"
+
+r.function_name = {{!r.whitespace .}* .}
+r.single_param = {!r.end_paren ![,] .}*
+alias r.multip_param = {[,] r.single_param }*
+r.parameters = {r.start_paren r.single_param r.multip_param r.end_paren}
+r.function = {r.function_name r.assignment r.parameters}
+r.functions = {r.alias_line_comment / r.function / .}*
+
+-------------------------------
+-- Classes
+--
+-- Pattern to match function definitions. Does not
+-- capture function bodies. Individual parameters are not parsed
+-- since parantheses need to be matched.
+-- Parameters that have assignments are not caught correctly for
+-- the same reason.
+--
+-- Run: rosie -wholefile r.functions <r-source-file>
+-- Structure: r.classes                      // Parent pattern to match all functions in a file
+--                \- r.class                 // Matches class definition
+--                    \- r.class_type        // Matches the type of class
+--                    \- r.param_list        // Matches the parameter list
+-------------------------------
+
+alias r.class = "class"
+alias r.unclass = "unclass"
+alias r.inherits = "inherits"
+alias r.old_class = "oldClass"
+
+r.class_assignment = {"<-" {!line_end !r.line_comment_start .}*}
+r.class_type = r.class / r.unclass / r.inherits / r.old_class
+r.param_list = {!r.class_assignment !r.line_comment_start !line_end .}*
+r.class = r.class_type r.param_list r.class_assignment?
+r.classes = {r.class / r.alias_line_comment / .}*
+
+r.file = {r.line_comment / r.dependency / r.function / r.class / .}*

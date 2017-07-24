@@ -1,0 +1,260 @@
+{
+    "r.classes": {
+        "subs": [
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "class",
+                                "pos": 33
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "(x) ",
+                                "pos": 38
+                            }
+                        }
+                    ],
+                    "text": "class(x) ",
+                    "pos": 33
+                }
+            },
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "oldClass",
+                                "pos": 54
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "(x) ",
+                                "pos": 62
+                            }
+                        }
+                    ],
+                    "text": "oldClass(x) ",
+                    "pos": 54
+                }
+            },
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "inherits",
+                                "pos": 73
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "(x, \"a\") ",
+                                "pos": 81
+                            }
+                        }
+                    ],
+                    "text": "inherits(x, \"a\") ",
+                    "pos": 73
+                }
+            },
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "class",
+                                "pos": 97
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "(x) ",
+                                "pos": 102
+                            }
+                        },
+                        {
+                            "r.class_assignment": {
+                                "text": "<- c(\"a\", \"b\")",
+                                "pos": 106
+                            }
+                        }
+                    ],
+                    "text": "class(x) <- c(\"a\", \"b\")",
+                    "pos": 97
+                }
+            },
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "inherits",
+                                "pos": 121
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "(x,\"a\") ",
+                                "pos": 129
+                            }
+                        }
+                    ],
+                    "text": "inherits(x,\"a\") ",
+                    "pos": 121
+                }
+            },
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "inherits",
+                                "pos": 143
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "(x, \"a\", TRUE) ",
+                                "pos": 151
+                            }
+                        }
+                    ],
+                    "text": "inherits(x, \"a\", TRUE) ",
+                    "pos": 143
+                }
+            },
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "inherits",
+                                "pos": 170
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "(x, c(\"a\", \"b\", \"c\"), TRUE) ",
+                                "pos": 178
+                            }
+                        }
+                    ],
+                    "text": "inherits(x, c(\"a\", \"b\", \"c\"), TRUE) ",
+                    "pos": 170
+                }
+            },
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "class",
+                                "pos": 215
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "( quote(pi) )           ",
+                                "pos": 220
+                            }
+                        }
+                    ],
+                    "text": "class( quote(pi) )           ",
+                    "pos": 215
+                }
+            },
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "class",
+                                "pos": 270
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "( quote(sin(pi*x)) )    ",
+                                "pos": 275
+                            }
+                        }
+                    ],
+                    "text": "class( quote(sin(pi*x)) )    ",
+                    "pos": 270
+                }
+            },
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "class",
+                                "pos": 326
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "( quote(x ",
+                                "pos": 331
+                            }
+                        },
+                        {
+                            "r.class_assignment": {
+                                "text": "<- 1) )       ",
+                                "pos": 341
+                            }
+                        }
+                    ],
+                    "text": "class( quote(x <- 1) )       ",
+                    "pos": 326
+                }
+            },
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "class",
+                                "pos": 362
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "( quote((1 < 2)) )      ",
+                                "pos": 367
+                            }
+                        }
+                    ],
+                    "text": "class( quote((1 < 2)) )      ",
+                    "pos": 362
+                }
+            },
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "class",
+                                "pos": 397
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "( quote( if(8<3) pi ) ) ",
+                                "pos": 402
+                            }
+                        }
+                    ],
+                    "text": "class( quote( if(8<3) pi ) ) ",
+                    "pos": 397
+                }
+            }
+        ],
+        "text": "# from r documentation\n\nx <- 10\nclass(x) # \"numeric\"\noldClass(x) # NULL\ninherits(x, \"a\") #FALSE\nclass(x) <- c(\"a\", \"b\")\ninherits(x,\"a\") #TRUE\ninherits(x, \"a\", TRUE) # 1\ninherits(x, c(\"a\", \"b\", \"c\"), TRUE) # 1 2 0\n\nclass( quote(pi) )           # \"name\"\n## regular calls\nclass( quote(sin(pi*x)) )    # \"class\"\n## special calls\nclass( quote(x <- 1) )       # \"<-\"\nclass( quote((1 < 2)) )      # \"(\"\nclass( quote( if(8<3) pi ) ) # \"if\"\n",
+        "pos": 1
+    }
+}

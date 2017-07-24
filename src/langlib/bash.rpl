@@ -1,0 +1,91 @@
+-------------------------------
+-- Inline Comments
+--
+-- Matches in line comments starting with a '#'. Also
+-- captures the code preceding the comment on the same line.
+--
+-- Run: rosie -wholefile b.line_comments <bash-source-file>
+-- Structure: b.line_comments                     // Parent pattern to extract all comments from file
+--                \- b.line_comment               // Matches a single line comment
+--                    \- b.line_comment_context   // The code on the line preceding the comment
+--                    \- b.line_comment_body      // Matches the whole comment text
+--                        \- b.line_comment_text  // The text of the comment
+-------------------------------
+
+alias b.line_comment_start = "#"
+b.line_comment_text = {!line_end .}*
+alias b.line_comment_pre = {!b.line_comment_start !line_end .}*
+b.line_comment_context = {!b.line_comment_start !line_end .}*
+b.line_comment_body = {b.line_comment_start b.line_comment_text}
+b.line_comment = {b.line_comment_context b.line_comment_body}
+b.line_comments = {{b.line_comment / b.line_comment_body / b.line_comment_pre} .}*
+
+-- Aliased version of the pattern for use in other patterns
+alias b.alias_line_comment_text = {!line_end .}*
+alias b.alias_line_comment_context = {!b.line_comment_start !line_end .}*
+alias b.alias_line_comment_body = {b.line_comment_start b.alias_line_comment_text}
+alias b.alias_line_comment = {b.alias_line_comment_context b.alias_line_comment_body}
+
+-------------------------------
+-- Block Comments
+--
+-- There doesn't seem to be standard block comments in BASH but
+-- things of the form <<ANYWORD\n ...comment... \nANYWORD are commonly used.
+-- Because of this I'm picking out some commonly used "ANYWORDS".
+--
+-- Run: rosie -wholefile b.block_comments <bash-source-file>
+-- Structure: b.block_comments           // Parent pattern to match all block comments
+--                \- b.block_comment     // Matches a single block comment
+--                    \- b.comment_body  // Matches the body of a block comment
+-- NOTE: Bash does not have true "block" comments defined in the language syntax.
+--       As a result this is not truly supported by langlib. This pattern is untested
+--       but is left in incase some use may be found.
+-------------------------------
+--
+--alias b.block_comment_start = ":<<COMMENT" / "<<COMMENT" / "<<'COMMENT'"
+--alias b.block_comment_end = "\nCOMMENT"
+--
+--b.comment_body = {!b.block_comment_end .}*
+--b.block_comment = {b.block_comment_start b.comment_body b.block_comment_end}
+--alias b.block_comment_pre = {!b.block_comment_start .}*
+--b.block_comments = {b.block_comment_pre b.block_comment}*
+--
+-- Aliased version of the pattern for use in other patterns
+--alias b.alias_comment_body = {!b.block_comment_end .}*
+--alias b.alias_block_comment = {b.block_comment_start b.alias_comment_body b.block_comment_end}
+--
+-------------------------------
+-- String Literals
+--
+-- Currently matches for typical bash string and character literals.
+-- Does allow for escaped single and double quotes
+--
+-- Run: rosie -wholefile b.strings <bash-source-file>
+-- Structure: b.strings        // Parent pattern to match all string literals
+--                \- b.string  // Pattern to match a single string
+-------------------------------
+
+b.string = (["] {([\\] / !["]) .}* ["]) / (['] {([\\] / ![']) .}* ['])
+b.strings = {b.alias_line_comment / b.string / .}*
+
+--A "aliased" version is provided to allow for suppressed output in other patterns
+alias b.alias_string = (["] {([\\] / !["]) .}* ["]) / (['] {([\\] / ![']) .}* ['])
+
+-------------------------------
+-- Functions
+--
+-- Pattern to match function definitions. Does not
+-- capture function bodies.
+--
+-- Run: rosie -wholefile b.functions <bash-source-file>
+-- Structure: b.functions                 // Parent pattern that matches all function definitions
+--                \- b.function           // Matches an entire function definition
+--                    \- b.function_name  // Name of the function
+-------------------------------
+
+b.function_name = {!"()" ![ ] .}*
+alias b.temp_comment = {!"#" .}
+b.function = {{"function" b.function_name "()"} / {[ ]* b.function_name [ ]* "()"}}
+b.functions = {{!b.function {b.temp_comment / .}}* b.function}*
+
+b.file = {b.function / .}*

@@ -1,0 +1,1 @@
+{"r.strings":{"text":"# Read file\nstatesInfo <- read.csv()\n# subset data by region if region is 1\nsubset(statesInfo, state.region == 1)\nstateSubset <- statesInfo[statesInfo$illiteracy == 0.5, ]\n\nlibrary(ggplot2)\nlibrary(plyr)\n\nlibrary(twitteR)\n\n# Attributes and dimensions of data\ndim(stateSubset)\nstr(stateSubset)\n\nstateSubset # print out stateSubset\n","pos":1}}

@@ -1,0 +1,5 @@
+alias line_end = "\n"
+alias statement_end = ";"
+---
+--Comments common
+---

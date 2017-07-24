@@ -1,0 +1,36 @@
+{
+    "b.functions": {
+        "pos": 1,
+        "text": "# pwoodworth/bashsupport\n\nfunction f() {\n    function inner()",
+        "subs": [
+            {
+                "b.function": {
+                    "pos": 35,
+                    "text": " f()",
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 36,
+                                "text": "f"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "b.function": {
+                    "pos": 54,
+                    "text": " inner()",
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 55,
+                                "text": "inner"
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

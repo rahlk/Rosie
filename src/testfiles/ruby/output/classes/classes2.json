@@ -1,0 +1,6 @@
+{
+    "rb.classes": {
+        "text": "#!/usr/bin/ruby -w\n# there are no classes here\nputs \"Hello, Ruby!\"\n\n=begin\nThis is a multiline comment and can span as many lines as you\nlike#. But =begin and =end should be first on a line.\n=end\n\nputs \"=begin NOT A BLOCK COMMENT =end\"\n",
+        "pos": 1
+    }
+}

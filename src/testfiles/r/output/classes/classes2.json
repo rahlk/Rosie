@@ -1,0 +1,34 @@
+{
+    "r.classes": {
+        "subs": [
+            {
+                "r.class": {
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "text": "class",
+                                "pos": 40
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "text": "(x) ",
+                                "pos": 45
+                            }
+                        },
+                        {
+                            "r.class_assignment": {
+                                "text": "<- c(\"dctr\", class(x))",
+                                "pos": 49
+                            }
+                        }
+                    ],
+                    "text": "class(x) <- c(\"dctr\", class(x))",
+                    "pos": 40
+                }
+            }
+        ],
+        "text": "# rforge/dcr\ndctr <-\nfunction(x)\n{\n    class(x) <- c(\"dctr\", class(x))\n    x\n}\n",
+        "pos": 1
+    }
+}

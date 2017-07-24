@@ -1,0 +1,1 @@
+{"go.strings":{"pos":1,"text":"package main\n\n\t\n\nimport \"fmt\"\n\n\t\n\nfunc main() {\n    fmt.Println(\"hello world\")\n}\n\n","subs":[{"go.string":{"pos":25,"text":"\"fmt\""}},{"go.string":{"pos":65,"text":"\"hello world\""}}]}}

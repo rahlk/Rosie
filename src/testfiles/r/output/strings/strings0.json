@@ -1,0 +1,1 @@
+{"r.strings":{"pos":1,"subs":[{"r.string":{"pos":24,"text":"'stateData.csv'"}}],"text":"statesInfo <- read.csv('stateData.csv')\n\nsubset(statesInfo, state.region == 1)\nstateSubset <- statesInfo[statesInfo$illiteracy == 0.5, ]\n\ndim(stateSubset)\nstr(stateSubset)\n\nstateSubset\n"}}

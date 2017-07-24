@@ -1,0 +1,190 @@
+{
+    "b.functions": {
+        "subs": [
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 1207,
+                                "text": "zsh_stats"
+                            }
+                        }
+                    ],
+                    "pos": 1206,
+                    "text": " zsh_stats()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 1401,
+                                "text": "uninstall_oh_my_zsh"
+                            }
+                        }
+                    ],
+                    "pos": 1400,
+                    "text": " uninstall_oh_my_zsh()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 1479,
+                                "text": "upgrade_oh_my_zsh"
+                            }
+                        }
+                    ],
+                    "pos": 1478,
+                    "text": " upgrade_oh_my_zsh()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 1553,
+                                "text": "take"
+                            }
+                        }
+                    ],
+                    "pos": 1552,
+                    "text": " take()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 1596,
+                                "text": "open_command"
+                            }
+                        }
+                    ],
+                    "pos": 1595,
+                    "text": " open_command()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 2344,
+                                "text": "alias_value"
+                            }
+                        }
+                    ],
+                    "pos": 2343,
+                    "text": " alias_value()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 2670,
+                                "text": "try_alias_value"
+                            }
+                        }
+                    ],
+                    "pos": 2669,
+                    "text": " try_alias_value()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 2956,
+                                "text": "default"
+                            }
+                        }
+                    ],
+                    "pos": 2955,
+                    "text": " default()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 3298,
+                                "text": "env_default"
+                            }
+                        }
+                    ],
+                    "pos": 3297,
+                    "text": " env_default()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 4313,
+                                "text": "(_.!~*''"
+                            }
+                        }
+                    ],
+                    "pos": 4312,
+                    "text": " (_.!~*''()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 4411,
+                                "text": "omz_urlencode"
+                            }
+                        }
+                    ],
+                    "pos": 4410,
+                    "text": " omz_urlencode()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 5140,
+                                "text": "mark='_.!~*''"
+                            }
+                        }
+                    ],
+                    "pos": 5139,
+                    "text": " mark='_.!~*''()"
+                }
+            },
+            {
+                "b.function": {
+                    "subs": [
+                        {
+                            "b.function_name": {
+                                "pos": 6377,
+                                "text": "newline\nomz_urldecode"
+                            }
+                        }
+                    ],
+                    "pos": 6376,
+                    "text": " newline\nomz_urldecode()"
+                }
+            }
+        ],
+        "pos": 1,
+        "text": "<<COMMENT\nThe MIT License (MIT)\n\nCopyright (c) 2009-2017 Robby Russell and contributors\nSee the full list at https://github.com/robbyrussell/oh-my-zsh/contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\nCOMMENT\n\nfunction zsh_stats() {\n  fc -l 1 | awk '{CMD[$2]++;count++;}END { for (a in CMD)print CMD[a] \" \" CMD[a]/count*100 \"% \" a;}' | grep -v \"./\" | column -c3 -s \" \" -t | sort -nr | nl |  head -n20\n}\n\nfunction uninstall_oh_my_zsh() {\n  env ZSH=$ZSH sh $ZSH/tools/uninstall.sh\n}\n\nfunction upgrade_oh_my_zsh() {\n  env ZSH=$ZSH sh $ZSH/tools/upgrade.sh\n}\n\nfunction take() {\n  mkdir -p $1\n  cd $1\n}\n\nfunction open_command() {\n  emulate -L zsh\n  setopt shwordsplit\n\n  local open_cmd\n\n  # define the open command\n  case \"$OSTYPE\" in\n    darwin*)  open_cmd='open' ;;\n    cygwin*)  open_cmd='cygstart' ;;\n    linux*)   open_cmd='xdg-open' ;;\n    msys*)    open_cmd='start \"\"' ;;\n    *)        echo \"Platform $OSTYPE not supported\"\n              return 1\n              ;;\n  esac\n\n  # don't use nohup on OSX\n  if [[ \"$OSTYPE\" == darwin* ]]; then\n    $open_cmd \"$@\" &>/dev/null\n  else\n    nohup $open_cmd \"$@\" &>/dev/null\n  fi\n}\n\n#\n# Get the value of an alias.\n#\n# Arguments:\n#    1. alias - The alias to get its value from\n# STDOUT:\n#    The value of alias $1 (if it has one).\n# Return value:\n#    0 if the alias was found,\n#    1 if it does not exist\n#\nfunction alias_value() {\n    alias \"$1\" | sed \"s/^$1='\\(.*\\)'$/\\1/\"\n    test $(alias \"$1\")\n}\n\n#\n# Try to get the value of an alias,\n# otherwise return the input.\n#\n# Arguments:\n#    1. alias - The alias to get its value from\n# STDOUT:\n#    The value of alias $1, or $1 if there is no alias $1.\n# Return value:\n#    Always 0\n#\nfunction try_alias_value() {\n    alias_value \"$1\" || echo \"$1\"\n}\n\n#\n# Set variable \"$1\" to default value \"$2\" if \"$1\" is not yet defined.\n#\n# Arguments:\n#    1. name - The variable to set\n#    2. val  - The default value\n# Return value:\n#    0 if the variable exists, 3 if it was set\n#\nfunction default() {\n    test `typeset +m \"$1\"` && return 0\n    typeset -g \"$1\"=\"$2\"   && return 3\n}\n\n#\n# Set environment variable \"$1\" to default value \"$2\" if \"$1\" is not yet defined.\n#\n# Arguments:\n#    1. name - The env variable to set\n#    2. val  - The default value\n# Return value:\n#    0 if the env variable exists, 3 if it was set\n#\nfunction env_default() {\n    env | grep -q \"^$1=\" && return 0\n    export \"$1=$2\"       && return 3\n}\n\n\n# Required for $langinfo\nzmodload zsh/langinfo\n\n# URL-encode a string\n#\n# Encodes a string using RFC 2396 URL-encoding (%-escaped).\n# See: https://www.ietf.org/rfc/rfc2396.txt\n#\n# By default, reserved characters and unreserved \"mark\" characters are\n# not escaped by this function. This allows the common usage of passing\n# an entire URL in, and encoding just special characters in it, with\n# the expectation that reserved and mark characters are used appropriately.\n# The -r and -m options turn on escaping of the reserved and mark characters,\n# respectively, which allows arbitrary strings to be fully escaped for\n# embedding inside URLs, where reserved characters might be misinterpreted.\n#\n# Prints the encoded string on stdout.\n# Returns nonzero if encoding failed.\n#\n# Usage:\n#  omz_urlencode [-r] [-m] [-P] <string>\n#\n#    -r causes reserved characters (;/?:@&=+$,) to be escaped\n#\n#    -m causes \"mark\" characters (_.!~*''()-) to be escaped\n#\n#    -P causes spaces to be encoded as '%20' instead of '+'\nfunction omz_urlencode() {\n  emulate -L zsh\n  zparseopts -D -E -a opts r m P\n\n  local in_str=$1\n  local url_str=\"\"\n  local spaces_as_plus\n  if [[ -z $opts[(r)-P] ]]; then spaces_as_plus=1; fi\n  local str=\"$in_str\"\n\n  # URLs must use UTF-8 encoding; convert str to UTF-8 if required\n  local encoding=$langinfo[CODESET]\n  local safe_encodings\n  safe_encodings=(UTF-8 utf8 US-ASCII)\n  if [[ -z ${safe_encodings[(r)$encoding]} ]]; then\n    str=$(echo -E \"$str\" | iconv -f $encoding -t UTF-8)\n    if [[ $? != 0 ]]; then\n      echo \"Error converting string from $encoding to UTF-8\" >&2\n      return 1\n    fi\n  fi\n\n  # Use LC_CTYPE=C to process text byte-by-byte\n  local i byte ord LC_ALL=C\n  export LC_ALL\n  local reserved=';/?:@&=+$,'\n  local mark='_.!~*''()-'\n  local dont_escape=\"[A-Za-z0-9\"\n  if [[ -z $opts[(r)-r] ]]; then\n    dont_escape+=$reserved\n  fi\n  # $mark must be last because of the \"-\"\n  if [[ -z $opts[(r)-m] ]]; then\n    dont_escape+=$mark\n  fi\n  dont_escape+=\"]\"\n\n  # Implemented to use a single printf call and avoid subshells in the loop,\n  # for performance (primarily on Windows).\n  local url_str=\"\"\n  for (( i = 1; i <= ${#str}; ++i )); do\n    byte=\"$str[i]\"\n    if [[ \"$byte\" =~ \"$dont_escape\" ]]; then\n      url_str+=\"$byte\"\n    else\n      if [[ \"$byte\" == \" \" && -n $spaces_as_plus ]]; then\n        url_str+=\"+\"\n      else\n        ord=$(( [##16] #byte ))\n        url_str+=\"%$ord\"\n      fi\n    fi\n  done\n  echo -E \"$url_str\"\n}\n\n# URL-decode a string\n#\n# Decodes a RFC 2396 URL-encoded (%-escaped) string.\n# This decodes the '+' and '%' escapes in the input string, and leaves\n# other characters unchanged. Does not enforce that the input is a\n# valid URL-encoded string. This is a convenience to allow callers to\n# pass in a full URL or similar strings and decode them for human\n# presentation.\n#\n# Outputs the encoded string on stdout.\n# Returns nonzero if encoding failed.\n#\n# Usage:\n#   omz_urldecode <urlstring>  - prints decoded string followed by a newline\nomz_urldecode()"
+    }
+}

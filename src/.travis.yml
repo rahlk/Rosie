@@ -1,0 +1,49 @@
+#
+os:
+  - linux
+
+notifications:
+  slack: seniordesignibm2-2017:Jgiti7Vp36oyhMfFkJTHGZyg
+  
+branches:
+  only:
+  - master
+  - development
+  - c
+  - cpp
+  - bash
+  - csharp
+  - go
+  - java
+  - javascript
+  - lua
+  - matlab
+  - python
+  - recursive
+  - rosie
+  - ruby
+  - sql
+  - vb
+  - r
+
+before_install:
+- sudo apt-get update -qq
+- sudo apt-get install --yes git
+- sudo apt-get install --yes make
+- sudo apt-get install --yes libreadline6-dev
+- sudo apt-get install --yes gcc
+- sudo apt-get install python2.7-tk
+- sudo apt-get install python3-tk
+- sudo git clone --recursive https://github.com/jamiejennings/rosie-pattern-language.git /opt/rosie/
+- cd /opt/rosie 
+- sudo make linux
+- sudo make install
+- cd $TRAVIS_BUILD_DIR
+
+language: python
+python:
+   - "2.7"
+install: sudo pip install -r ./requirements.txt
+script: sudo python ./regression.py $TRAVIS_BUILD_NUMBER
+after_failure: |
+   curl -F file=@result$TRAVIS_BUILD_NUMBER.html -F channels=#results -F token=$SLACK_TOKEN https://slack.com/api/files.upload

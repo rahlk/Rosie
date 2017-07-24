@@ -1,0 +1,88 @@
+{
+    "r.classes": {
+        "pos": 1,
+        "subs": [
+            {
+                "r.class": {
+                    "pos": 8,
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "pos": 8,
+                                "text": "class"
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "pos": 13,
+                                "text": "(a)"
+                            }
+                        }
+                    ],
+                    "text": "class(a)\n"
+                }
+            },
+            {
+                "r.class": {
+                    "pos": 26,
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "pos": 26,
+                                "text": "class"
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "pos": 31,
+                                "text": "(b)"
+                            }
+                        }
+                    ],
+                    "text": "class(b)\n"
+                }
+            },
+            {
+                "r.class": {
+                    "pos": 45,
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "pos": 45,
+                                "text": "class"
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "pos": 50,
+                                "text": "(c)"
+                            }
+                        }
+                    ],
+                    "text": "class(c)\n"
+                }
+            },
+            {
+                "r.class": {
+                    "pos": 60,
+                    "subs": [
+                        {
+                            "r.class_type": {
+                                "pos": 60,
+                                "text": "class"
+                            }
+                        },
+                        {
+                            "r.param_list": {
+                                "pos": 65,
+                                "text": "(d)"
+                            }
+                        }
+                    ],
+                    "text": "class(d)\n"
+                }
+            }
+        ],
+        "text": "a = 15\nclass(a)\nb = 10.5\nclass(b)\nc = \"abc\"\nclass(c)\nd = T\nclass(d)\n"
+    }
+}

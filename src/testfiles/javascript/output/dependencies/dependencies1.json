@@ -1,0 +1,36 @@
+{
+    "js.dependencies": {
+        "text": "// jolly-roger/geonames-server-js\n\nimport Import from './Import';\n\nexport default Import;\n",
+        "subs": [
+            {
+                "js.dependency": {
+                    "text": "import Import from './Import'",
+                    "subs": [
+                        {
+                            "js.member": {
+                                "text": "Import",
+                                "subs": [
+                                    {
+                                        "js.member_name": {
+                                            "text": "Import",
+                                            "pos": 43
+                                        }
+                                    }
+                                ],
+                                "pos": 43
+                            }
+                        },
+                        {
+                            "js.module": {
+                                "text": "'./Import'",
+                                "pos": 55
+                            }
+                        }
+                    ],
+                    "pos": 36
+                }
+            }
+        ],
+        "pos": 1
+    }
+}
